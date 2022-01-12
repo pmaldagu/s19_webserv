@@ -14,32 +14,35 @@ class Server
         Server(Server const& copy);
         ~Server();
 
-        Server& operator=(Server const& copy);
+        Server&     operator=(Server const& copy);
 
         std::string getPort() const;
         std::string getHost() const;
         std::string getTimeout() const;
 
-        void setPort(std::string myport);
-        void setHost(std::string myhost);
-        void setTimeout(std::string mytimeout);
+        void        setPort(std::string myport);
+        void        setHost(std::string myhost);
+        void        setTimeout(std::string mytimeout);
 
     private:
-        std::string _port;
-        std::string _host;
-        std::string _timeout;
-        std::list<class Location> list_locations;
+        std::string                 _port;
+        std::string                 _host;
+        std::string                 _timeout;
+        std::list<class Location>   list_locations;
 };
 
 class Location //: public Server
 {
     public :
         Location();
+        Location(Location const & copy);
         ~Location();
+
+        Location& operator=(Location const& copy);
 };
 
-std::list<class Location> getLocationsBlocks(std::string confFile);
-std::list<class Server> getServerBlocks(std::string confFile);
-std::list<class Server> parsingConf(std::string confFile);
+std::list<class Location>   getLocationsBlocks(std::string confFile);
+std::list<class Server>     getServerBlocks(std::string confFile);
+std::list<class Server>     parsingConf(std::string confFile);
 
 #endif

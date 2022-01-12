@@ -1,4 +1,4 @@
-#include "../../includes/parsing.hpp"
+#include "../include/parsing.hpp"
 
 /***********************************************************/
 /***********************************************************/
@@ -8,12 +8,14 @@
 
 Server::Server()
 {
-
+    this->_port = nullptr;
+    this->_host = nullptr;
+    this->_timeout = nullptr;
 }
 
 Server::Server(Server const& copy)
 {
-    copy = *this;
+    *this = copy;
 }
 
 Server::~Server()
@@ -23,11 +25,11 @@ Server::~Server()
 
 Server& Server::operator=(Server const& copy)
 {
-    if (&copy != this)
+    if (this != &copy)
     {
         this->_port = copy._port;
         this->_host = copy._host;
-        this->_timeout = copy._stimeout;
+        this->_timeout = copy._timeout;
     }
     return (*this);
 }
@@ -73,9 +75,23 @@ Location::Location()
 
 }
 
+Location::Location(Location const & copy)
+{
+    *this = copy;
+}
+
 Location::~Location()
 {
 
+}
+
+Location& Location::operator=(Location const& copy)
+{
+    if (this != &copy)
+    {
+
+    }
+    return (*this);
 }
 
 /***********************************************************/
@@ -84,12 +100,12 @@ Location::~Location()
 /***********************************************************/
 /***********************************************************/
 
-/*
 std::list<class Location> getLocationsBlocks(std::string confFile)
 {
-    return ;
+    std::list<class Location> location_list;
+
+    return (location_list);
 }
-*/
 
 std::list<class Server> getServerBlocks(std::string confFile)
 {
@@ -101,13 +117,13 @@ std::list<class Server> getServerBlocks(std::string confFile)
 std::list<class Server> parsingConf(std::string confFile)
 {
     std::list<class Server> serv_list;
-    std::ifstream ifs(confFile);
-    std::string line;
-    std::string strConf;
+    std::ifstream           ifs(confFile);
+    std::string             line;
+    std::string             strConf;
 
     if (!ifs.is_open())
     {
-        std::cout << "Error while opening config file\n";
+        std::cout << "Error while opening the configuration file\n";
         exit(1);
     }
     while (getline(ifs, line))
