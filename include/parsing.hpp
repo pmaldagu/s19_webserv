@@ -6,6 +6,13 @@
 # include <iostream>
 # include <fstream>
 # include <algorithm>
+# include <netinet/in.h>
+
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
 
 class Server
 {
@@ -19,23 +26,27 @@ class Server
         std::string getPort() const;
         std::string getHost() const;
         std::string getTimeout() const;
+        //sockaddr_in getSockaddr_in() const;
 
         void        setPort(std::string myport);
         void        setHost(std::string myhost);
         void        setTimeout(std::string mytimeout);
+        //void        setSockaddr_in();
 
     private:
-        std::string                 _port;
-        std::string                 _host;
+        std::string                 _str_serv;
+        std::string                 _port; // deja dans _address
+        std::string                 _host; // deja dans _address
         std::string                 _timeout;
         std::list<class Location>   list_locations;
+        struct sockaddr_in          *_address;
 };
 
 class Location //: public Server
 {
     public :
         Location();
-        Location(Location const & copy);
+        Location(Location const& copy);
         ~Location();
 
         Location& operator=(Location const& copy);

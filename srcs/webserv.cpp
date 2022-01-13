@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 
     if (argc != 2)
     {
-        std::cout << "Error : Configuration file is missing." << std::endl;
+        std::cerr << RED << "Error : Configuration file is missing." << RESET << std::endl;
         return (-1);
     }
     servList = parsingConf(argv[1]);
