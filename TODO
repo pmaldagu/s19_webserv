@@ -30,3 +30,11 @@ http {
 	}
 	}
 }
+
+
+
+
+- Une classe config
+- Une classe Webserv
+- Une classe Server dans Webserv
+- Une classe Location (enfant de Server) dans server

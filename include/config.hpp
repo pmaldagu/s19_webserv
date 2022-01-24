@@ -1,11 +1,13 @@
-#ifndef PARSING_HPP
-# define PARSING_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
 # include <list>
+# include <vector>
 # include <string>
 # include <iostream>
 # include <fstream>
 # include <algorithm>
+# include <exception>
 # include <netinet/in.h>
 
 #define RESET   "\033[0m"
@@ -13,6 +15,21 @@
 #define GREEN   "\033[32m"
 #define YELLOW  "\033[33m"
 #define BLUE    "\033[34m"
+
+class Config
+{
+    public :
+        Config();
+        Config(std::string path);
+        Config(Config const& copy);
+        ~Config();
+
+        Config& operator=(Config const& copy);
+
+    private :
+        std::vector<std::string>    _data;
+
+};
 
 class Server
 {
@@ -42,7 +59,7 @@ class Server
         struct sockaddr_in          *_address;
 };
 
-class Location //: public Server
+class Location : public Server
 {
     public :
         Location();

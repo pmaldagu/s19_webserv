@@ -1,4 +1,47 @@
-#include "../include/parsing.hpp"
+#include "../include/config.hpp"
+
+/***********************************************************/
+/***********************************************************/
+/*******************    Config Class    ********************/
+/***********************************************************/
+/***********************************************************/
+
+Config::Config()
+{
+
+}
+
+Config::Config(std::string path)
+{
+    std::ifstream           ifs(path);
+    std::string             line;
+
+    if (!ifs.is_open())
+        throw std::exception();
+    while (getline(ifs, line))
+        this->_data.push_back(line);
+    for (int a = 0; a < _data.size(); a++)
+        std::cout << _data[a] << std::endl;
+}
+
+Config::Config(Config const& copy)
+{
+    *this = copy;
+}
+
+Config::~Config()
+{
+
+}
+
+Config& Config::operator=(Config const& copy)
+{
+    if (this != &copy)
+    {
+
+    }
+    return (*this);
+}
 
 /***********************************************************/
 /***********************************************************/
