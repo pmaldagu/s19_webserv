@@ -20,6 +20,7 @@ Config::Config(std::string path)
         throw std::exception();
     while (getline(ifs, line))
         this->_data.push_back(line);
+    index = _data.begin();
     for (int a = 0; a < _data.size(); a++)
         std::cout << _data[a] << std::endl;
 }
@@ -38,9 +39,49 @@ Config& Config::operator=(Config const& copy)
 {
     if (this != &copy)
     {
-
+        for (int a = 0; a < copy._data.size(); a++)
+            this->_data.push_back(copy._data[a]);
+        for (int a = 0; a < copy._serv_vector.size(); a++)
+            this->_serv_vector.push_back(copy._serv_vector[a]);
     }
     return (*this);
+}
+
+void Config::setServ()
+{
+    std::vector<std::string>::iterator endBlock;
+    std::vector<std::string>::iterator found;
+    int i = 0;
+    
+    while (index != _data.end())
+    {
+        endBlock = find(index, endBlock, std::string("}"));
+        if ((found = find(index, endBlock, std::string("root")) != endBlock)
+            _serv_vector(i.setRoot(*found - "root"));
+        else if ((found = find(index, endBlock, std::string("listen")) != endBlock)
+            _serv_vector(i.setPort(*found - "root"));
+        else if ((found = find(index, endBlock, std::string("host")) != endBlock)
+            _serv_vector(i.setHost(*found - "root"));
+        else if ((found = find(index, endBlock, std::string("tiemout")) != endBlock)
+            _serv_vector(i.setTimeout(*found - "root"));
+        index = endBlock + 1;
+        i++;
+    }
+}
+
+std::vector<class Location>::iterator setLocation()
+{
+    
+}
+
+std::vector<class Server> Config::getServ() const
+{
+    return (this->_serv_vector);
+}
+
+std::vector<class Location> Config::getLocation() const
+{
+    return ();
 }
 
 /***********************************************************/
@@ -51,6 +92,7 @@ Config& Config::operator=(Config const& copy)
 
 Server::Server()
 {
+    this->_root = "";
     this->_port = "";
     this->_host = "";
     this->_timeout = "";
@@ -82,6 +124,7 @@ Server& Server::operator=(Server const& copy)
 {
     if (this != &copy)
     {
+        this->_root = copy._root;
         this->_port = copy._port;
         this->_host = copy._host;
         this->_timeout = copy._timeout;
@@ -89,19 +132,9 @@ Server& Server::operator=(Server const& copy)
     return (*this);
 }
 
-std::string Server::getPort() const
+void Server::setRoot(std::string myroot)
 {
-    return (this->_port);
-}
-
-std::string Server::getHost() const
-{
-    return (this->_host);
-}
-
-std::string Server::getTimeout() const
-{
-    return (this->_timeout);
+    this->_root = myroot;
 }
 
 void Server::setPort(std::string myport)
@@ -117,6 +150,26 @@ void Server::setHost(std::string myhost)
 void Server::setTimeout(std::string mytimeout)
 {
     this->_timeout = mytimeout;
+}
+
+std::string Server::getRoot() const
+{
+    return (this->_root);
+}
+
+std::string Server::getPort() const
+{
+    return (this->_port);
+}
+
+std::string Server::getHost() const
+{
+    return (this->_host);
+}
+
+std::string Server::getTimeout() const
+{
+    return (this->_timeout);
 }
 
 /***********************************************************/
@@ -155,12 +208,14 @@ Location& Location::operator=(Location const& copy)
 /***********************************************************/
 /***********************************************************/
 
+/*
 std::list<class Location> getLocationsBlocks(std::string confFile)
 {
     std::list<class Location> location_list;
 
     return (location_list);
 }
+*/
 
 /*
 void parsingServerData(Server &server)
@@ -208,6 +263,7 @@ std::list<class Server> getServerBlocks(std::string confFile)
     return (serv_list);
 }
 
+/*
 std::list<class Server> parsingConf(std::string confFile)
 {
     std::list<class Server> serv_list;
@@ -227,3 +283,20 @@ std::list<class Server> parsingConf(std::string confFile)
     std::cout << strConf << std::endl;
     return (serv_list);
 }
+
+ * CONFIG CLASS
+Server lol;
+
+std::vector<std::string>::iterator bgin;
+std::vector<std::string>::iterator end;
+std::vector<std::string>::iterator found;
+
+bgin = _serv_vector.begin();
+end = _serv_vector.end();
+
+found = find(bgin, end, std::string("root "))
+
+lol.setRoot(*(found + 1));
+
+
+*/

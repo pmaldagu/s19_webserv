@@ -19,16 +19,24 @@
 class Config
 {
     public :
-        Config();
         Config(std::string path);
         Config(Config const& copy);
         ~Config();
 
         Config& operator=(Config const& copy);
 
-    private :
-        std::vector<std::string>    _data;
+        void                                    setServ();
+        std::vector<class Location>::iterator   setLocation();
 
+        std::vector<class Server>           getServ() const;
+        std::vector<class Location>         getLocation() const;
+
+        std::vector<std::string>::iterator index;
+
+    private :
+        Config();
+        std::vector<std::string>    _data;
+        std::vector<class Server>   _serv_vector;
 };
 
 class Server
@@ -40,18 +48,20 @@ class Server
 
         Server&     operator=(Server const& copy);
 
-        std::string getPort() const;
-        std::string getHost() const;
-        std::string getTimeout() const;
-        //sockaddr_in getSockaddr_in() const;
-
+        void        setRoot(std::string myroot);
         void        setPort(std::string myport);
         void        setHost(std::string myhost);
         void        setTimeout(std::string mytimeout);
         //void        setSockaddr_in();
 
+        std::string getRoot() const;
+        std::string getPort() const;
+        std::string getHost() const;
+        std::string getTimeout() const;
+        //sockaddr_in getSockaddr_in() const;
+
     private:
-        std::string                 _str_serv;
+        std::string                 _root;
         std::string                 _port; // deja dans _address
         std::string                 _host; // deja dans _address
         std::string                 _timeout;
@@ -69,8 +79,8 @@ class Location : public Server
         Location& operator=(Location const& copy);
 };
 
-std::list<class Location>   getLocationsBlocks(std::string confFile);
+//std::list<class Location>   getLocationsBlocks(std::string confFile);
 std::list<class Server>     getServerBlocks(std::string confFile);
-std::list<class Server>     parsingConf(std::string confFile);
+//std::list<class Server>     parsingConf(std::string confFile);
 
 #endif
