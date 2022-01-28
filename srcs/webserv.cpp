@@ -15,7 +15,13 @@ int main(int argc, char **argv)
         Config *file = new Config(argv[1]);
 
         file->setServ();
-        //std::cout << file->getServ()[0].getRoot() << std::endl;
+        ///////////////// Print my values ///////////////////// 
+        std::cout << file->getServ()[0].getRoot() << std::endl;
+        std::cout << file->getServ()[0].getPort() << std::endl;
+        std::cout << file->getServ()[0].getHost() << std::endl;
+        std::cout << file->getServ()[1].getPort() << std::endl;
+        ///////////////////////////////////////////////////////
+
 //        Webserv web(file);
 
 //        web.launch();

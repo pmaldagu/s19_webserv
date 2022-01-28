@@ -22,8 +22,4 @@ class Config
         std::vector<class Server>           _serv_vector;
 };
 
-//std::list<class Location>   getLocationsBlocks(std::string confFile);
-//std::list<class Server>     getServerBlocks(std::string confFile);
-//std::list<class Server>     parsingConf(std::string confFile);
-
 #endif

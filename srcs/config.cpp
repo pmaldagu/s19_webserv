@@ -59,7 +59,6 @@ void Config::setServ()
             this->_serv_vector.push_back(*newServ);
             while ((*it).find("}") == std::string::npos)
             {
-                //std::cout << *it << std::endl;
                 if ((*it).find("root") != std::string::npos)
                     this->_serv_vector[a].setRoot(*it);
                 else if ((*it).find("listen") != std::string::npos)
@@ -73,7 +72,6 @@ void Config::setServ()
             a++;
         }
     }
-
 
 /*
     std::vector<std::string>::iterator endBlock = _data.end();
@@ -153,26 +151,34 @@ Server& Server::operator=(Server const& copy)
 
 void Server::setRoot(std::string myroot)
 {
+    myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
+    myroot.erase(0, 4);
+    myroot.pop_back();
     this->_root = myroot;
-    std::cout << this->_root << std::endl;
 }
 
 void Server::setPort(std::string myport)
 {
+    myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
+    myport.erase(0, 6);
+    myport.pop_back();
     this->_port = myport; // deja dans _address, changer
-    std::cout << this->_port << std::endl;
 }
 
 void Server::setHost(std::string myhost)
 {
+    myhost.erase(std::remove_if(myhost.begin(), myhost.end(), isspace), myhost.end());
+    myhost.erase(0, 4);
+    myhost.pop_back();
     this->_host = myhost; // deja dans _address, changer
-    std::cout << this->_host << std::endl;
 }
 
 void Server::setTimeout(std::string mytimeout)
 {
+    mytimeout.erase(std::remove_if(mytimeout.begin(), mytimeout.end(), isspace), mytimeout.end());
+    mytimeout.erase(0, 7);
+    mytimeout.pop_back();
     this->_timeout = mytimeout;
-    std::cout << this->_timeout << std::endl;
 }
 
 std::vector<class Location> Server::setLocation()
@@ -234,74 +240,3 @@ Location& Location::operator=(Location const& copy)
     }
     return (*this);
 }
-
-/***********************************************************/
-/***********************************************************/
-/**************    Non-member functions    *****************/
-/***********************************************************/
-/***********************************************************/
-
-/*
-std::list<class Server> getServerBlocks(std::string confFile)
-{
-    std::list<class Server> serv_list;
-    std::string             target = "server{";
-    size_t                  nbr_of_serv = 0;
-    size_t                  pos = 0;
-    size_t                  a = 0;
-
-    while ((pos = confFile.find(target, pos)) != std::string::npos)
-    {
-        pos += target.length();
-        nbr_of_serv++;
-    }
-    while (a < nbr_of_serv)
-    {
-        Server *server = new Server;
-        //server->_str_serv = getStrserv(confFile);
-        //parsingServerData(*server);
-        serv_list.push_back(*server);
-        a++;
-    }
-
-    //std::cout << nbr_of_serv << std::endl;
-    return (serv_list);
-}
-*/
-/*
-std::list<class Server> parsingConf(std::string confFile)
-{
-    std::list<class Server> serv_list;
-    std::ifstream           ifs(confFile);
-    std::string             line;
-    std::string             strConf;
-
-    if (!ifs.is_open())
-    {
-        std::cerr << RED << "Error while opening the configuration file" << RESET << std::endl;
-        exit(1);
-    }
-    while (getline(ifs, line))
-        strConf.append(line);
-    strConf.erase(std::remove_if(strConf.begin(), strConf.end(), isspace), strConf.end());
-    serv_list = getServerBlocks(strConf);
-    std::cout << strConf << std::endl;
-    return (serv_list);
-}
-
- * CONFIG CLASS
-Server lol;
-
-std::vector<std::string>::iterator bgin;
-std::vector<std::string>::iterator end;
-std::vector<std::string>::iterator found;
-
-bgin = _serv_vector.begin();
-end = _serv_vector.end();
-
-found = find(bgin, end, std::string("root "))
-
-lol.setRoot(*(found + 1));
-
-
-*/
