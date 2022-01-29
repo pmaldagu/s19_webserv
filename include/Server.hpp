@@ -17,14 +17,14 @@ class Server
         void                        setHost(std::string myhost);
         void                        setTimeout(std::string mytimeout);
         std::vector<class Location> setLocation();
-        //void                      setSockaddr_in();
+        void						setSockaddr();
 
         std::string                 getRoot() const;
         std::string                 getPort() const;
         std::string                 getHost() const;
         std::string                 getTimeout() const;
         std::vector<class Location> getLocation() const;
-        //sockaddr_in               getSockaddr_in() const;
+        struct sockaddr_in*			getSockaddr() const;
 
     private:
         std::string                 _root;

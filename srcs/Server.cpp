@@ -33,7 +33,7 @@ Server::Server(Server const& copy)
 
 Server::~Server()
 {
-
+	delete this->_address;
 }
 
 Server& Server::operator=(Server const& copy)
@@ -68,6 +68,7 @@ void Server::setHost(std::string myhost)
 {
     myhost.erase(std::remove_if(myhost.begin(), myhost.end(), isspace), myhost.end());
     myhost.erase(0, 4);
+    myhost.erase(std::remove(myhost.begin(), myhost.end(), '.'), myhost.end());
     myhost.pop_back();
     this->_host = myhost; // deja dans _address, changer
 }
@@ -80,9 +81,27 @@ void Server::setTimeout(std::string mytimeout)
     this->_timeout = mytimeout;
 }
 
+void Server::setSockaddr()
+{
+	this->_address = new struct sockaddr_in;
+
+	memset(_address, 0, sizeof(*_address));
+	this->_address->sin_family = AF_INET;
+	if (this->_host.empty())
+		this->_address->sin_addr.s_addr = INADDR_ANY;
+	else
+		this->_address->sin_addr.s_addr = htonl(std::stoul(this->_host, nullptr, 0));
+	this->_address->sin_port = htons(std::stoul(this->_port, nullptr, 0));
+	/*debug*/
+	std::cout << "HOST : " << std::stoul(this->_host, nullptr, 0) << std::endl;
+	std::cout << "HOSTl : " << this->_address->sin_port << std::endl;
+	std::cout << "PORT : " << std::stoul(this->_port, nullptr, 0) << std::endl;
+	std::cout << "PORTn : " << this->_address->sin_addr.s_addr << std::endl;
+}
+	
 std::vector<class Location> Server::setLocation()
 {
-
+	return (this->_location_vector);
 }
 
 std::string Server::getRoot() const
@@ -109,4 +128,10 @@ std::vector<class Location> Server::getLocation() const
 {
     return (this->_location_vector);
 }
+
+struct sockaddr_in* Server::getSockaddr() const
+{
+    return (this->_address);
+}
+
 

@@ -7,6 +7,7 @@ class Webserv
 {
 	public:
 		Webserv();
+		Webserv(std::vector<class Server> const& servers);
 		Webserv(Webserv const& copy);
 		~Webserv();
 
@@ -21,8 +22,8 @@ class Webserv
 		void launch( void );
 
 	private:
-		std::list<class Server> _servers;
-		struct pollfd* _fds;
+		std::vector<class Server> _servers;
+		int* _fds;
 
 };
 
