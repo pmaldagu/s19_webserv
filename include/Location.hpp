@@ -1,14 +1,14 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-# include "server.hpp"
+# include "lib.hpp"
 
-class Location : public Server
+class Location
 {
     public :
         Location();
         Location(Location const& copy);
-        ~Location();
+        virtual ~Location();
 
         Location& operator=(Location const& copy);
 };

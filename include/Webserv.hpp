@@ -1,14 +1,7 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Webserv.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/25 15:03:01 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/01/25 15:21:27 by pmaldagu         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
+
+#include "lib.hpp"
 
 class Webserv
 {
@@ -28,8 +21,9 @@ class Webserv
 		void launch( void );
 
 	private:
-		std::list<Server> _servers;
+		std::list<class Server> _servers;
 		struct pollfd* _fds;
 
 };
 
+#endif
