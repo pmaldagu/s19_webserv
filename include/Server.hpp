@@ -1,14 +1,14 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include "webserv.hpp"
+# include "lib.hpp"
 
 class Server
 {
     public :
         Server();
         Server(Server const& copy);
-        ~Server();
+        virtual ~Server();
 
         Server&     operator=(Server const& copy);
 

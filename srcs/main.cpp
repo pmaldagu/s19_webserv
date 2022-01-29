@@ -1,7 +1,4 @@
-#include "../include/webserv.hpp"
-#include "../include/config.hpp"
-#include "../include/server.hpp"
-#include "../include/location.hpp"
+#include "../include/lib.hpp"
 
 int main(int argc, char **argv)
 {

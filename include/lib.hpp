@@ -1,5 +1,5 @@
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#ifndef LIB_HPP
+# define LIB_HPP
 
 # include <iostream>
 # include <cstdio>
@@ -9,7 +9,12 @@
 # include <fstream>
 # include <algorithm>
 # include <exception>
-# include <netinet/in.h>
+//# include <netinet/in.h>
+
+# include "Webserv.hpp"
+# include "Config.hpp"
+# include "Server.hpp"
+# include "Location.hpp"
 
 #define RESET   "\033[0m"
 #define RED     "\033[31m"
