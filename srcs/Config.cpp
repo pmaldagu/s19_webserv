@@ -47,27 +47,31 @@ void Config::setServ()
 {
     std::vector<std::string>::iterator  it;
     std::vector<std::string>::iterator  it_end = this->_data.end();
-    size_t                              a = 0;
+    //size_t                              a = 0;
+	Server								newServ;
 
     for (it = this->_data.begin(); it != it_end; it++)
     {
         if ((*it).find("server {") != std::string::npos)
         {
-            Server *newServ = new Server;
-            this->_serv_vector.push_back(*newServ);
+            //Server newServ = new Server;//////p-e pas new;
+            //this->_serv_vector.push_back(*newServ);
             while ((*it).find("}") == std::string::npos)
             {
                 if ((*it).find("root") != std::string::npos)
-                    this->_serv_vector[a].setRoot(*it);
+                    newServ.setRoot(*it);
                 else if ((*it).find("listen") != std::string::npos)
-                    this->_serv_vector[a].setPort(*it);
+                    newServ.setPort(*it);
                 else if ((*it).find("host") != std::string::npos)
-                    this->_serv_vector[a].setHost(*it);
+                    newServ.setHost(*it);
                 else if ((*it).find("timeout") != std::string::npos)
-                    this->_serv_vector[a].setTimeout(*it);
+                    newServ.setTimeout(*it);
                 it++;
             }
-            a++;
+			//newServ.setLocation();
+			newServ.setSockaddr();
+            this->_serv_vector.push_back(newServ);
+            //a++;
         }
     }
 

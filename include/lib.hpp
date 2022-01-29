@@ -5,11 +5,15 @@
 # include <cstdio>
 # include <list>
 # include <string>
+# include <cstring>
 # include <vector>
 # include <fstream>
 # include <algorithm>
 # include <exception>
-//# include <netinet/in.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+# include <sys/ioctl.h>
+# include <functional>
 
 # include "Webserv.hpp"
 # include "Config.hpp"
