@@ -19,11 +19,6 @@ Server::Server()
     //_index
     //_default_error_page
     //http_methods
-
-    // memset((char *)&_address, 0, sizeof(_address));
-    // _address.sin_family = AF_INET;                       //toujours AF_INET
-    // _address.sin_addr.s_addr = htonl(this->_host);       //IP address
-    // _address.sin_port = htons(this->_port);              //port
 }
 
 Server::Server(Server const& copy)
@@ -61,7 +56,7 @@ void Server::setPort(std::string myport)
     myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
     myport.erase(0, 6);
     myport.pop_back();
-    this->_port = myport; // deja dans _address, changer
+    this->_port = myport;
 }
 
 void Server::setHost(std::string myhost)
@@ -70,7 +65,7 @@ void Server::setHost(std::string myhost)
     myhost.erase(0, 4);
     myhost.erase(std::remove(myhost.begin(), myhost.end(), '.'), myhost.end());
     myhost.pop_back();
-    this->_host = myhost; // deja dans _address, changer
+    this->_host = myhost;
 }
 
 void Server::setTimeout(std::string mytimeout)
@@ -92,6 +87,7 @@ void Server::setSockaddr()
 	else
 		this->_address->sin_addr.s_addr = htonl(std::stoul(this->_host, nullptr, 0));
 	this->_address->sin_port = htons(std::stoul(this->_port, nullptr, 0));
+
 	/*debug*/
 	std::cout << "HOST : " << std::stoul(this->_host, nullptr, 0) << std::endl;
 	std::cout << "HOSTl : " << this->_address->sin_port << std::endl;

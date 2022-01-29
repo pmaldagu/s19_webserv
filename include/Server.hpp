@@ -28,8 +28,8 @@ class Server
 
     private:
         std::string                 _root;
-        std::string                 _port; // deja dans _address
-        std::string                 _host; // deja dans _address
+        std::string                 _port;
+        std::string                 _host;
         std::string                 _timeout;
         std::vector<class Location> _location_vector;
         struct sockaddr_in          *_address;

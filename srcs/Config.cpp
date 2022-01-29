@@ -47,15 +47,12 @@ void Config::setServ()
 {
     std::vector<std::string>::iterator  it;
     std::vector<std::string>::iterator  it_end = this->_data.end();
-    //size_t                              a = 0;
 	Server								newServ;
 
     for (it = this->_data.begin(); it != it_end; it++)
     {
         if ((*it).find("server {") != std::string::npos)
         {
-            //Server newServ = new Server;//////p-e pas new;
-            //this->_serv_vector.push_back(*newServ);
             while ((*it).find("}") == std::string::npos)
             {
                 if ((*it).find("root") != std::string::npos)
@@ -71,31 +68,8 @@ void Config::setServ()
 			//newServ.setLocation();
 			newServ.setSockaddr();
             this->_serv_vector.push_back(newServ);
-            //a++;
         }
     }
-
-/*
-    std::vector<std::string>::iterator endBlock = _data.end();
-    std::vector<std::string>::iterator found;
-    int i = 0;
-    
-    while (index != _data.end())
-    {
-        endBlock = find(index, endBlock, std::string("}"));
-        std::cout << *endBlock << std::endl;
-        if ((found = find(index, endBlock, std::string("root"))) != endBlock)
-            _serv_vector[i].setRoot(*found);
-        else if ((found = find(index, endBlock, std::string("listen"))) != endBlock)
-            _serv_vector[i].setPort(*found);
-        else if ((found = find(index, endBlock, std::string("host"))) != endBlock)
-            _serv_vector[i].setHost(*found);
-        else if ((found = find(index, endBlock, std::string("timeout"))) != endBlock)
-            _serv_vector[i].setTimeout(*found);
-        index = endBlock + 1;
-        i++;
-    }
-*/
 }
 
 std::vector<class  Server> Config::getServ() const

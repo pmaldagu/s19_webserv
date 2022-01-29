@@ -127,31 +127,6 @@ void Webserv::setListen( void )
 /*
 void Webserv::launch( void )
 {
-	int timeout;
-	int ret = 0;
-	int index = 0;
-
-	timeout = (3 * 60 * 100); ////example to change
-
-	while (true)
-	{
-		ret = poll(_fds, FD_MAX, timeout);
-		if (rc =< 0)
-			throw std::runtime_error("poll() failed");
-		if (rc == 0)
-			throw std::runtime_error("timeout");
-		index = 0;
-		while ( i < _servers.size() )
-		{
-			if ( _fds[index].revents & POLLIN )
-				ret = accept(_fds[index].fd, NULL, NULL);
-			if (ret < 0)
-				std::runtime_error("accept() failed");
-
-
-
-
-
-
-}*/
-
+	//Utiliser select()
+}
+*/
