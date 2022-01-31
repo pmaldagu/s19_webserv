@@ -17,6 +17,8 @@ int main(int argc, char **argv)
         std::cout << file->getServ()[0].getPort() << std::endl;
         std::cout << file->getServ()[0].getHost() << std::endl;
         std::cout << file->getServ()[1].getPort() << std::endl;
+        //std::cout << file->getServ()[0].getSockaddr()->sin_port << std::endl;
+        //std::cout << file->getServ()[0].getSockaddr() << std::endl;
         ///////////////////////////////////////////////////////
 
 //        Webserv web(file);

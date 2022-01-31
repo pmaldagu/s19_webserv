@@ -100,7 +100,7 @@ void Webserv::bindSocket( void )
 
 	for( ; bgin != end; bgin++)
 	{
-		if ((bind(_fds[index], (struct sockaddr *)_servers[index].getSockaddr(), sizeof(struct sockaddr_in))) < 0)
+		if ((bind(_fds[index], (struct sockaddr *)&_servers[index].getSockaddr(), sizeof(struct sockaddr_in))) < 0)
 			throw std::runtime_error("bind() failed");
 		index++;
 	}
