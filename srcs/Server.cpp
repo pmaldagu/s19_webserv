@@ -42,6 +42,10 @@ Server& Server::operator=(Server const& copy)
         this->_port = copy._port;
         this->_host = copy._host;
         this->_timeout = copy._timeout;
+		memset(&_address, 0, sizeof(_address));
+		this->_address.sin_addr.s_addr = copy._address.sin_addr.s_addr;
+		this->_address.sin_port = copy._address.sin_port;
+		this->_address.sin_family = copy._address.sin_family;
     }
     return (*this);
 }

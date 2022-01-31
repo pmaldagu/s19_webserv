@@ -2,6 +2,7 @@
 # define LIB_HPP
 
 # include <iostream>
+# include <unistd.h>
 # include <cstdio>
 # include <list>
 # include <string>

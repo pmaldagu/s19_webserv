@@ -19,11 +19,13 @@ class Webserv
 		void bindSocket( void );
 		void setListen( void );
 		void initializePoll( void );
+		/*multiplexer*/
 		void launch( void );
 
 	private:
 		std::vector<class Server> _servers;
-		int* _fds;
+		std::vector<int>  _masterfds;
+		std::vector<int>  _clientfds;
 
 };
 
