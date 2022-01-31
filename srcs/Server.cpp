@@ -13,7 +13,6 @@ Server::Server()
     this->_host = "";
     this->_timeout = "";
 
-	//this->_address = new struct sockaddr_in;
 	memset(&_address, 0, sizeof(_address));
 
     //_root
@@ -31,7 +30,7 @@ Server::Server(Server const& copy)
 
 Server::~Server()
 {
-	//delete this->_address;
+
 }
 
 Server& Server::operator=(Server const& copy)
@@ -68,7 +67,6 @@ void Server::setHost(std::string myhost)
 {
     myhost.erase(std::remove_if(myhost.begin(), myhost.end(), isspace), myhost.end());
     myhost.erase(0, 4);
-    myhost.erase(std::remove(myhost.begin(), myhost.end(), '.'), myhost.end());
     this->_host = myhost;
 }
 
@@ -81,14 +79,11 @@ void Server::setTimeout(std::string mytimeout)
 
 void Server::setSockaddr()
 {
-	// this->_address = new struct sockaddr_in;
-
-	// memset(_address, 0, sizeof(*_address));
 	this->_address.sin_family = AF_INET;
 	if (this->_host.empty())
 		this->_address.sin_addr.s_addr = INADDR_ANY;
 	else
-		this->_address.sin_addr.s_addr = htonl(std::stoul(this->_host, nullptr, 0));
+		this->_address.sin_addr.s_addr = inet_addr(this->_host.c_str());
 	this->_address.sin_port = htons(std::stoul(this->_port, nullptr, 0));
 
 	/*debug*/

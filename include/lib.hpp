@@ -15,6 +15,7 @@
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <functional>
+# include <arpa/inet.h>
 
 # include "Webserv.hpp"
 # include "Config.hpp"

@@ -82,9 +82,8 @@ void Config::setServ()
             }
 			//newServ.setLocation();
 			newServ->setSockaddr();
-            //std::cout << "newServ : " << &newServ->getSockaddr() << std::endl;
             this->_serv_vector.push_back(*newServ);
-            //std::cout << "_serv_vector : " << &_serv_vector[0].getSockaddr() << std::endl;
+            delete newServ;
         }
     }
 }

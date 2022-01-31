@@ -80,11 +80,8 @@ void Webserv::setNonblocking( void )
 
 void Webserv::bindSocket( void )
 {
-	
-	std::cout << "ADDR : " << _servers[0].getSockaddr().sin_port << std::endl;
 	for(int index = 0 ; index < _servers.size(); index++) 
 	{
-		//std::cout << "INDEX : " << index << std::endl;
 		if ((bind(_masterfds[index], (struct sockaddr *)&_servers[index].getSockaddr(), sizeof(struct sockaddr_in))) < 0)
 			throw std::runtime_error("bind() failed");
 	}
@@ -109,7 +106,7 @@ void Webserv::launch( void )
 	fd_set readfds;
 
 	/*debug*/
-	char* buffer = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
+	std::string buffer = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 	int addrlen = sizeof(struct sockaddr_in);
 	while (true)
 	{
@@ -149,7 +146,7 @@ void Webserv::launch( void )
 				if ((new_socket = accept(_masterfds[i], (struct sockaddr *)&_servers[i].getSockaddr(), (socklen_t*)&addrlen)) < 0)
 					throw std::runtime_error("accept() failed");
 				/*send message*/
-				if (send(new_socket, buffer, strlen(buffer), 0) != strlen(buffer))
+				if (send(new_socket, buffer.c_str(), buffer.size(), 0) != buffer.size())
 					throw std::runtime_error("send() failed");
 				_clientfds.push_back(new_socket);
 			}

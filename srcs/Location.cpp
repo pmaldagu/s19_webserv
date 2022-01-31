@@ -29,4 +29,3 @@ Location& Location::operator=(Location const& copy)
     }
     return (*this);
 }
-
