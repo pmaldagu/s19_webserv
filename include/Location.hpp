@@ -11,6 +11,16 @@ class Location
         virtual ~Location();
 
         Location& operator=(Location const& copy);
+
+        void setIndex(std::string index);
+        void setPostlocation(std::string postlocation);
+
+        std::string getIndex() const;
+        std::string getPostlocation() const;
+
+    private :
+        std::string _index;
+        std::string _postlocation;
 };
 
 #endif

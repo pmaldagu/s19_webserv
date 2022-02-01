@@ -29,9 +29,9 @@ Config::Config(std::string path) : _serv_vector()
             (*it).erase(a, (*it).length() - a);
     }
 
-    //////////// print .conf //////////////
-    for (int a = 0; a < _data.size(); a++)
-        std::cout << _data[a] << std::endl;
+    ////////// print .conf clean //////////
+    // for (int a = 0; a < _data.size(); a++)
+    //     std::cout << _data[a] << std::endl;
     ///////////////////////////////////////
 }
 
@@ -68,9 +68,9 @@ void Config::setServ()
             Server *newServ = new Server;
             while ((*it).find("}") == std::string::npos)
             {
-                //if ((*it).find("location {") != std::string::npos)
-                    //it = newServ.setLocation();
-                if ((*it).find("root") != std::string::npos)
+                if ((*it).find("location") != std::string::npos)
+                    it = newServ->setLocation(it, it_end);
+                else if ((*it).find("root") != std::string::npos)
                     newServ->setRoot(*it);
                 else if ((*it).find("listen") != std::string::npos)
                     newServ->setPort(*it);
@@ -78,9 +78,10 @@ void Config::setServ()
                     newServ->setHost(*it);
                 else if ((*it).find("timeout") != std::string::npos)
                     newServ->setTimeout(*it);
+                else if ((*it).find("client_max_body_size") != std::string::npos)
+                    newServ->setCmaxsize(*it);
                 it++;
             }
-			//newServ.setLocation();
 			newServ->setSockaddr();
             this->_serv_vector.push_back(*newServ);
             delete newServ;

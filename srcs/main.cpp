@@ -12,16 +12,14 @@ int main(int argc, char **argv)
         Config *file = new Config(argv[1]);
 
         file->setServ();
-        ///////////////// Print my values ///////////////////// 
-        std::cout << file->getServ()[0].getRoot() << std::endl;
-        std::cout << file->getServ()[0].getPort() << std::endl;
-        std::cout << file->getServ()[0].getHost() << std::endl;
-        std::cout << file->getServ()[1].getPort() << std::endl;
-        ///////////////////////////////////////////////////////
+        //////////////// Print my data /////////////////
+        for (int a = 0; a < file->getServ().size(); a++)
+            file->getServ()[a].debug();
+        ////////////////////////////////////////////////
 
-        Webserv web(file->getServ());
+        //Webserv web(file->getServ());
 
-        web.launch();
+        //web.launch();
     }
     catch (std::exception &e)
     {
