@@ -21,6 +21,7 @@
 # include "Config.hpp"
 # include "Server.hpp"
 # include "Location.hpp"
+# include "Client.hpp"
 
 #define RESET   "\033[0m"
 #define RED     "\033[31m"
