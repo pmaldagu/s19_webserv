@@ -10,16 +10,16 @@ class Config
         Config(Config const& copy);
         ~Config();
 
-        Config& operator=(Config const& copy);
+        Config&                     operator=(Config const& copy);
 
-        void                                setServ();
+        void                        setServ();
 
-        std::vector<class Server>           getServ() const;
+        std::vector<class Server>   getServ() const;
 
     private :
         Config();
-        std::vector<std::string>            _data;
-        std::vector<class Server>           _serv_vector;
+        std::vector<std::string>    _data;
+        std::vector<class Server>   _serv_vector;
 };
 
 #endif

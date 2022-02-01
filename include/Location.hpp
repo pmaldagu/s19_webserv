@@ -10,10 +10,10 @@ class Location
         Location(Location const& copy);
         virtual ~Location();
 
-        Location& operator=(Location const& copy);
+        Location&   operator=(Location const& copy);
 
-        void setIndex(std::string index);
-        void setPostlocation(std::string postlocation);
+        void        setIndex(std::string index);
+        void        setPostlocation(std::string postlocation);
 
         std::string getIndex() const;
         std::string getPostlocation() const;
