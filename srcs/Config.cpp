@@ -30,7 +30,7 @@ Config::Config(std::string path) : _serv_vector()
     }
 
     ////////// print .conf clean //////////
-    // for (int a = 0; a < _data.size(); a++)
+    //for (int a = 0; a < _data.size(); a++)
     //     std::cout << _data[a] << std::endl;
     ///////////////////////////////////////
 }
@@ -80,6 +80,9 @@ void Config::setServ()
                     newServ->setTimeout(*it);
                 else if ((*it).find("client_max_body_size") != std::string::npos)
                     newServ->setCmaxsize(*it);
+                else if ((*it).find("server_name") != std::string::npos)
+                    newServ->setServername(*it);
+                
                 it++;
             }
 			newServ->setSockaddr();

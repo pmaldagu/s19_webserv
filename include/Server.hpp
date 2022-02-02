@@ -16,7 +16,8 @@ class Server
         void                                setPort(std::string myport);
         void                                setHost(std::string myhost);
         void                                setTimeout(std::string mytimeout);
-        void                                setCmaxsize(std::string& myclientbodysize);
+        void                                setCmaxsize(std::string myclientbodysize);
+        void                                setServername(std::string servername);
         std::vector<std::string>::iterator  setLocation(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2);
         void                                setSockaddr();
 
@@ -25,7 +26,8 @@ class Server
         std::string                         getHost() const;
         std::string                         getTimeout() const;
         std::string                         getCmaxsize() const;
-        std::vector<class Location>         getLocation() const;    
+        std::string                         getServername() const;
+        std::vector<class Location>         getLocation() const;
         struct sockaddr_in&                 getSockaddr();
 
         void                                debug() const;
@@ -36,6 +38,7 @@ class Server
         std::string                         _host;
         std::string                         _timeout;
         std::string                         _client_max_body_size;
+        std::string                         _server_name;
         std::vector<class Location>         _location_vector;
         struct sockaddr_in                  _address;
 };

@@ -1,15 +1,14 @@
 #include "../include/lib.hpp"
 
-/***********************************************************/
-/***********************************************************/
-/*****************    Location Class   *********************/
-/***********************************************************/
-/***********************************************************/
-
 Location::Location()
 {
     this->_index = "";
-    this->_postlocation = "";
+    this->_path = "";
+    this->_error_page = "";
+    this->_upload_dir = "";
+    this->_get_method = false;
+    this->_post_method = false;
+    this->_delete_method = false;
 }
 
 Location::Location(Location const & copy)
@@ -24,7 +23,12 @@ Location& Location::operator=(Location const& copy)
     if (this != &copy)
     {
         this->_index = copy._index;
-        this->_postlocation = copy._postlocation;
+        this->_path = copy._path;
+        this->_error_page = copy._error_page;
+        this->_upload_dir = copy._upload_dir;
+        this->_get_method = copy._get_method;
+        this->_post_method = copy._post_method;
+        this->_delete_method = copy._delete_method;
     }
     return (*this);
 }
@@ -36,12 +40,44 @@ void Location::setIndex(std::string index)
     this->_index = index;
 }
 
-void Location::setPostlocation(std::string postlocation)
+void Location::setPath(std::string path)
 {
-    postlocation.erase(std::remove_if(postlocation.begin(), postlocation.end(), isspace), postlocation.end());
-    postlocation.erase(0, 8);
-    postlocation.pop_back();
-    this->_postlocation = postlocation;
+    path.erase(std::remove_if(path.begin(), path.end(), isspace), path.end());
+    path.erase(0, 8);
+    path.pop_back();
+    this->_path = path;
+}
+
+void Location::setErrorPage(std::string errorpage)
+{
+    errorpage.erase(std::remove_if(errorpage.begin(), errorpage.end(), isspace), errorpage.end());
+    errorpage.erase(0, 10);
+    this->_error_page = errorpage;
+}
+
+void Location::setUploadDir(std::string uploaddir)
+{
+    uploaddir.erase(std::remove_if(uploaddir.begin(), uploaddir.end(), isspace), uploaddir.end());
+    uploaddir.erase(0, 10);
+    this->_upload_dir = uploaddir;
+}
+
+void Location::setGetMethod(bool b)
+{
+    if (b == true)
+        this->_get_method = true;
+}
+
+void Location::setPostMethod(bool b)
+{
+    if (b == true)
+        this->_post_method = true;
+}
+
+void Location::setDeleteMethod(bool b)
+{
+    if (b == true)
+        this->_delete_method = true;
 }
 
 std::string Location::getIndex() const
@@ -49,7 +85,32 @@ std::string Location::getIndex() const
     return (this->_index);
 }
 
-std::string Location::getPostlocation() const
+std::string Location::getPath() const
 {
-    return (this->_postlocation);
+    return (this->_path);
+}
+
+std::string Location::getErrorPage() const
+{
+    return (this->_error_page);
+}
+
+std::string Location::getUploadDir() const
+{
+    return (this->_upload_dir);
+}
+
+bool Location::getGetMethod() const
+{
+    return (this->_get_method);
+}
+
+bool Location::getPostMethod() const
+{
+    return (this->_post_method);
+}
+
+bool Location::getDeleteMethod() const
+{
+    return (this->_delete_method);
 }

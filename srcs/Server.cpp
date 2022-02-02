@@ -1,10 +1,11 @@
 #include "../include/lib.hpp"
 
-/***********************************************************/
-/***********************************************************/
-/*******************    Server Class    ********************/
-/***********************************************************/
-/***********************************************************/
+				// size_file = cpy.size_file;
+				// _nport = cpy._nport;
+				// _cgi_path = cpy._cgi_path;
+				// _cgi_extension = cpy._cgi_extension;
+				// _http_redirection[0] = cpy._http_redirection[0];
+				// _http_redirection[1] = cpy._http_redirection[1];
 
 Server::Server()
 {
@@ -13,15 +14,12 @@ Server::Server()
     this->_host = "";
     this->_timeout = "";
     this->_client_max_body_size = "";
+    this->_server_name = "";
 
 	memset(&_address, 0, sizeof(_address));
 
-    //_root
-    //_client_body_size
-    //_autoindex
-    //_index
-    //_default_error_page
     //http_methods
+    //default_error_page
 }
 
 Server::Server(Server const& copy)
@@ -40,6 +38,7 @@ Server& Server::operator=(Server const& copy)
         this->_host = copy._host;
         this->_timeout = copy._timeout;
         this->_client_max_body_size = copy._client_max_body_size;
+        this->_server_name = copy._server_name;
         this->_location_vector.clear();
         for (int a = 0; a < copy._location_vector.size(); a++)
             this->_location_vector.push_back(copy._location_vector[a]);
@@ -56,7 +55,6 @@ void Server::setRoot(std::string myroot)
     myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
     myroot.erase(0, 4);
     this->_root = myroot;
-    //std::cout << this->_root << std::endl;
 }
 
 void Server::setPort(std::string myport)
@@ -64,7 +62,6 @@ void Server::setPort(std::string myport)
     myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
     myport.erase(0, 6);
     this->_port = myport;
-    //std::cout << this->_port << std::endl;
 }
 
 void Server::setHost(std::string myhost)
@@ -81,11 +78,18 @@ void Server::setTimeout(std::string mytimeout)
     this->_timeout = mytimeout;
 }
 
-void Server::setCmaxsize(std::string& myclientbodysize)
+void Server::setCmaxsize(std::string myclientbodysize)
 {
     myclientbodysize.erase(std::remove_if(myclientbodysize.begin(), myclientbodysize.end(), isspace), myclientbodysize.end());
     myclientbodysize.erase(0, 20);
     this->_client_max_body_size = myclientbodysize;
+}
+
+void Server::setServername(std::string servername)
+{
+    servername.erase(std::remove_if(servername.begin(), servername.end(), isspace), servername.end());
+    servername .erase(0, 11);
+    this->_server_name = servername;
 }
 
 void Server::setSockaddr()
@@ -107,9 +111,22 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     while ((*it).find("}") == std::string::npos)
     {
         if ((*it).find("location") != std::string::npos)
-            newLocation->setPostlocation(*it);
+            newLocation->setPath(*it);
         else if ((*it).find("index") != std::string::npos)
             newLocation->setIndex(*it);
+        else if ((*it).find("error_page") != std::string::npos)
+            newLocation->setErrorPage(*it);
+        else if ((*it).find("upload_dir") != std::string::npos)
+            newLocation->setUploadDir(*it);
+        else if ((*it).find("http_methods") != std::string::npos)
+        {
+            if ((*it).find("GET") != std::string::npos)
+                newLocation->setGetMethod(true);
+            if ((*it).find("POST") != std::string::npos)
+                newLocation->setPostMethod(true);
+            if ((*it).find("DELETE") != std::string::npos)
+                newLocation->setDeleteMethod(true);
+        }
         it++;
     }
     this->_location_vector.push_back(*newLocation);
@@ -147,6 +164,11 @@ std::vector<class Location> Server::getLocation() const
     return (this->_location_vector);
 }
 
+std::string Server::getServername() const
+{
+    return (this->_server_name);
+}
+
 struct sockaddr_in& Server::getSockaddr()
 {
     return (this->_address);
@@ -160,13 +182,20 @@ void Server::debug() const
     std::cout << GREEN << "   -Port : " << RESET << this->getPort() << std::endl;
     std::cout << GREEN << "   -Host : " << RESET << this->getHost() << std::endl;
     std::cout << GREEN << "   -TimeOut : " << RESET << this->getTimeout() << std::endl;
-    std::cout << GREEN << "   -Client : " << RESET << this->getCmaxsize() << std::endl;
+    std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
+    std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;
+
 
     ///// Print Location //////
     for (int a = 0; a < this->getLocation().size(); a++)
     {
         std::cout << YELLOW << "   -> Location " << RESET << &this->getLocation()[a] << std::endl;
-        std::cout << YELLOW << "       -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
-        std::cout << YELLOW << "       -Post Location : " << RESET << this->getLocation()[a].getPostlocation() << std::endl;
+        std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
+        std::cout << YELLOW << "      -Path : " << RESET << this->getLocation()[a].getPath() << std::endl;
+        std::cout << YELLOW << "      -Error page : " << RESET << this->getLocation()[a].getErrorPage() << std::endl;
+        std::cout << YELLOW << "      -Upload Dir : " << RESET << this->getLocation()[a].getUploadDir() << std::endl;
+        std::cout << YELLOW << "      -Get method : " << RESET << this->getLocation()[a].getGetMethod() << std::endl;
+        std::cout << YELLOW << "      -Post method : " << RESET << this->getLocation()[a].getPostMethod() << std::endl;
+        std::cout << YELLOW << "      -Delete method : " << RESET << this->getLocation()[a].getDeleteMethod() << std::endl;
     }
 }
