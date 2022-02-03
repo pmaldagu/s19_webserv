@@ -81,7 +81,7 @@ void Request::parseAccept( void )
 	index += 8;
 	if ( line == this->_buffer.size())
 		throw std::runtime_error("parseAccept() failed");
-	while((ret = _buffer[line].find(",", index)) != std::string::npos)
+	while((ret = _buffer[line].find(",", index)) != std::string::npos || (ret = _buffer[line].find(";", index)) != std::string::npos )
 	{
 		this->_accept.push_back(_buffer[line].substr(index, ret - index));
 		index = ret + 1;
