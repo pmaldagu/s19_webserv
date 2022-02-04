@@ -18,6 +18,7 @@ class Server
         void                                setTimeout(std::string mytimeout);
         void                                setCmaxsize(std::string myclientbodysize);
         void                                setServername(std::string servername);
+        void                                setRedirection(std::string redirection);
         std::vector<std::string>::iterator  setLocation(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2);
         void                                setSockaddr();
 
@@ -27,6 +28,7 @@ class Server
         std::string                         getTimeout() const;
         std::string                         getCmaxsize() const;
         std::string                         getServername() const;
+        std::string                         getRedirection() const;
         std::vector<class Location>         getLocation() const;
         struct sockaddr_in&                 getSockaddr();
 
@@ -39,6 +41,7 @@ class Server
         std::string                         _timeout;
         std::string                         _client_max_body_size;
         std::string                         _server_name;
+        std::string                         _redirection;
         std::vector<class Location>         _location_vector;
         struct sockaddr_in                  _address;
 };

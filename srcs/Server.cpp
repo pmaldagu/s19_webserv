@@ -1,11 +1,11 @@
 #include "../include/lib.hpp"
 
-				// size_file = cpy.size_file;
-				// _nport = cpy._nport;
-				// _cgi_path = cpy._cgi_path;
-				// _cgi_extension = cpy._cgi_extension;
-				// _http_redirection[0] = cpy._http_redirection[0];
-				// _http_redirection[1] = cpy._http_redirection[1];
+// size_file = cpy.size_file;
+// _nport = cpy._nport;
+// _cgi_path = cpy._cgi_path;
+// _cgi_extension = cpy._cgi_extension;
+// _http_redirection[0] = cpy._http_redirection[0];
+// _http_redirection[1] = cpy._http_redirection[1];
 
 Server::Server()
 {
@@ -15,11 +15,9 @@ Server::Server()
     this->_timeout = "";
     this->_client_max_body_size = "";
     this->_server_name = "";
+    this->_redirection = "";
 
 	memset(&_address, 0, sizeof(_address));
-
-    //http_methods
-    //default_error_page
 }
 
 Server::Server(Server const& copy)
@@ -39,6 +37,7 @@ Server& Server::operator=(Server const& copy)
         this->_timeout = copy._timeout;
         this->_client_max_body_size = copy._client_max_body_size;
         this->_server_name = copy._server_name;
+        this->_redirection = copy._redirection;
         this->_location_vector.clear();
         for (int a = 0; a < copy._location_vector.size(); a++)
             this->_location_vector.push_back(copy._location_vector[a]);
@@ -61,6 +60,11 @@ void Server::setPort(std::string myport)
 {
     myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
     myport.erase(0, 6);
+    if (myport.size() > 4)
+    {
+        std::cerr << "Error : The port is not valid.\n";
+        throw std::exception();
+    }
     this->_port = myport;
 }
 
@@ -88,8 +92,15 @@ void Server::setCmaxsize(std::string myclientbodysize)
 void Server::setServername(std::string servername)
 {
     servername.erase(std::remove_if(servername.begin(), servername.end(), isspace), servername.end());
-    servername .erase(0, 11);
+    servername.erase(0, 11);
     this->_server_name = servername;
+}
+
+void Server::setRedirection(std::string redirection)
+{
+    redirection.erase(std::remove_if(redirection.begin(), redirection.end(), isspace), redirection.end());
+    redirection.erase(0, 6);
+    this->_redirection = redirection;
 }
 
 void Server::setSockaddr()
@@ -112,6 +123,8 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     {
         if ((*it).find("location") != std::string::npos)
             newLocation->setPath(*it);
+        else if ((*it).find("root") != std::string::npos)
+            newLocation->setRoot(*it);
         else if ((*it).find("index") != std::string::npos)
             newLocation->setIndex(*it);
         else if ((*it).find("error_page") != std::string::npos)
@@ -169,6 +182,11 @@ std::string Server::getServername() const
     return (this->_server_name);
 }
 
+std::string Server::getRedirection() const
+{
+    return (this->_redirection);
+}
+
 struct sockaddr_in& Server::getSockaddr()
 {
     return (this->_address);
@@ -182,6 +200,7 @@ void Server::debug() const
     std::cout << GREEN << "   -Port : " << RESET << this->getPort() << std::endl;
     std::cout << GREEN << "   -Host : " << RESET << this->getHost() << std::endl;
     std::cout << GREEN << "   -TimeOut : " << RESET << this->getTimeout() << std::endl;
+    std::cout << GREEN << "   -Return : " << RESET << this->getRedirection() << std::endl;
     std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
     std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;
 
@@ -190,8 +209,9 @@ void Server::debug() const
     for (int a = 0; a < this->getLocation().size(); a++)
     {
         std::cout << YELLOW << "   -> Location " << RESET << &this->getLocation()[a] << std::endl;
-        std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
         std::cout << YELLOW << "      -Path : " << RESET << this->getLocation()[a].getPath() << std::endl;
+        std::cout << YELLOW << "      -Root : " << RESET << this->getLocation()[a].getRoot() << std::endl;
+        std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
         std::cout << YELLOW << "      -Error page : " << RESET << this->getLocation()[a].getErrorPage() << std::endl;
         std::cout << YELLOW << "      -Upload Dir : " << RESET << this->getLocation()[a].getUploadDir() << std::endl;
         std::cout << YELLOW << "      -Get method : " << RESET << this->getLocation()[a].getGetMethod() << std::endl;

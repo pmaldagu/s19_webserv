@@ -1,11 +1,5 @@
 #include "../include/lib.hpp"
 
-/***********************************************************/
-/***********************************************************/
-/*******************    Config Class    ********************/
-/***********************************************************/
-/***********************************************************/
-
 Config::Config() {}
 
 Config::Config(std::string path) : _serv_vector()
@@ -78,11 +72,12 @@ void Config::setServ()
                     newServ->setHost(*it);
                 else if ((*it).find("timeout") != std::string::npos)
                     newServ->setTimeout(*it);
+                else if ((*it).find("return") != std::string::npos)
+                    newServ->setRedirection(*it);
                 else if ((*it).find("client_max_body_size") != std::string::npos)
                     newServ->setCmaxsize(*it);
                 else if ((*it).find("server_name") != std::string::npos)
                     newServ->setServername(*it);
-                
                 it++;
             }
 			newServ->setSockaddr();
