@@ -6,7 +6,7 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/04 13:58:17 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/04 16:25:59 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,15 +154,16 @@ void Webserv::acceptConnection(int index, int flag)
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
 
 //	std::cout << "SOCKET SATUT BEFORE : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
-//	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
-//			throw std::runtime_error("ioctl() failed");
+	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
+			throw std::runtime_error("ioctl() failed");
 
 //	std::cout << "SOCKET SATUT AFTER : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
 //	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
 //			throw std::runtime_error("setsockopt() failed");
 
-	FD_SET(new_socket, &readfds);
-	FD_SET(new_socket, &writefds);
+	//FD_SET(new_socket, &readfds);
+	//FD_SET(new_socket, &writefds);
+	
 	_clientfds.push_back(new_socket); ///must create class Client with fd and header
 }
 
@@ -203,50 +204,59 @@ void Webserv::launch( void )
 	int ret = -1;
 	int max_sd;
 	int new_socket;
+	int req = 0;
 	//int ok = 0;
 
 	/*debug*/
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 
+	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)
 	{
 		//ok = 0;
 		/*set fd*/
 		max_sd = setFds();
+		req = 0;
 
 		/*select*/
 		ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL);
 		if (ret <= 0)
 			throw std::runtime_error("select() failed");
 		
+		/*check client side*/
+		for (int i = 0; i < _clientfds.size(); i++)
+		{
+			if (FD_ISSET(_clientfds[i], &readfds))
+			{
+				std::cout << RED << "===CLIENT===" << RESET << std::endl;
+				receiveRequest(_clientfds[i], READ);
+				req = 1;
+			}
+			if (FD_ISSET(_clientfds[i], &writefds) && req == 1)
+			{
+				std::cout << RED << "===CLIENT===" << RESET << std::endl;
+				std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
+				send(_clientfds[i], greets.c_str(), greets.size(), 0);
+				closeClientsFd(); // faux doit verifier keep alive
+				break
+			}
+
+		}
+		//closeClientsFd(); // faux doit verifier keep alive
+		
+
 		/*check master side*/
 		for (int i = 0; i < _masterfds.size(); i++)
 		{
 			if (FD_ISSET(_masterfds[i], &readfds))
 			{
-				std::cout << std::endl << BLUE << "===MASTER===" << RESET << std::endl;
+				std::cout << BLUE << "===MASTER===" << RESET << std::endl;
 				/*accept connect*/
 				acceptConnection(i, READ);
-				//ok = 1;
+				break;
 			}
 		}
-	
-		/*check client side*/
-		for (int i = 0; i < _clientfds.size(); i++)
-		{
-			if (FD_ISSET(_clientfds[i], &writefds))
-			{
-				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
-				receiveRequest(_clientfds[i], WRITE);
-			}
-			if (FD_ISSET(_clientfds[i], &readfds))
-			{
-				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
-				std::cout << YELLOW << "=> READ" << RESET << std::endl;
-				send(_clientfds[i], greets.c_str(), greets.size(), 0);
-			}
-		}
-		closeClientsFd(); // faux doit verifier keep alive
-		std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
+		//std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
+		usleep(200);
 	}
 }
