@@ -6,7 +6,7 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/04 16:25:59 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/04 16:41:32 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,17 +153,9 @@ void Webserv::acceptConnection(int index, int flag)
 	std::cout << YELLOW << "     -Socket fd : " << RESET << new_socket << std::endl;
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
 
-//	std::cout << "SOCKET SATUT BEFORE : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
 	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
 			throw std::runtime_error("ioctl() failed");
 
-//	std::cout << "SOCKET SATUT AFTER : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
-//	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
-//			throw std::runtime_error("setsockopt() failed");
-
-	//FD_SET(new_socket, &readfds);
-	//FD_SET(new_socket, &writefds);
-	
 	_clientfds.push_back(new_socket); ///must create class Client with fd and header
 }
 
@@ -172,8 +164,6 @@ void Webserv::receiveRequest(int fd, int flag)
 	int ret = 1;
 	char buffer[30001]; // change 3000 par max body size ?;
 	
-	memset(buffer, 0, 30001); //change 3000 par body size;
-
 	if (flag == READ)
 		std::cout << YELLOW << "=> READ" << RESET << std::endl;
 	else
@@ -183,11 +173,10 @@ void Webserv::receiveRequest(int fd, int flag)
 	ret = recv(fd, buffer, 30000, 0);
 	if(ret < 0)
 		throw std::runtime_error("recv() failed");
-			//break;
 		
 	std::cout << GREEN << "-> Receive" << RESET << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
-	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl;
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer;
 }
 
 void Webserv::closeClientsFd( void )
@@ -205,7 +194,6 @@ void Webserv::launch( void )
 	int max_sd;
 	int new_socket;
 	int req = 0;
-	//int ok = 0;
 
 	/*debug*/
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
@@ -228,29 +216,27 @@ void Webserv::launch( void )
 		{
 			if (FD_ISSET(_clientfds[i], &readfds))
 			{
-				std::cout << RED << "===CLIENT===" << RESET << std::endl;
+				std::cout << RED << "\n===CLIENT===" << RESET << std::endl;
 				receiveRequest(_clientfds[i], READ);
 				req = 1;
 			}
 			if (FD_ISSET(_clientfds[i], &writefds) && req == 1)
 			{
-				std::cout << RED << "===CLIENT===" << RESET << std::endl;
+				std::cout << RED << "\n===CLIENT===" << RESET << std::endl;
 				std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
 				send(_clientfds[i], greets.c_str(), greets.size(), 0);
 				closeClientsFd(); // faux doit verifier keep alive
-				break
+				break;
 			}
 
 		}
-		//closeClientsFd(); // faux doit verifier keep alive
-		
 
 		/*check master side*/
 		for (int i = 0; i < _masterfds.size(); i++)
 		{
 			if (FD_ISSET(_masterfds[i], &readfds))
 			{
-				std::cout << BLUE << "===MASTER===" << RESET << std::endl;
+				std::cout << BLUE << "\n===MASTER===" << RESET << std::endl;
 				/*accept connect*/
 				acceptConnection(i, READ);
 				break;
