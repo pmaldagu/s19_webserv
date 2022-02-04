@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     }
     catch (std::exception &e)
     {
+				std::cout << RED << "ERROR: " << RESET << e.what() << std::endl;
 //        web.close();
 //        delete file;
     }

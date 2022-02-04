@@ -6,7 +6,7 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/04 13:32:49 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/04 13:58:17 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,8 +153,11 @@ void Webserv::acceptConnection(int index, int flag)
 	std::cout << YELLOW << "     -Socket fd : " << RESET << new_socket << std::endl;
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
 
+//	std::cout << "SOCKET SATUT BEFORE : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
 //	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
 //			throw std::runtime_error("ioctl() failed");
+
+//	std::cout << "SOCKET SATUT AFTER : " << fcntl(new_socket, F_SETFL, O_NONBLOCK) << std::endl;
 //	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
 //			throw std::runtime_error("setsockopt() failed");
 
@@ -200,12 +203,14 @@ void Webserv::launch( void )
 	int ret = -1;
 	int max_sd;
 	int new_socket;
+	//int ok = 0;
 
 	/*debug*/
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 
 	while (true)
 	{
+		//ok = 0;
 		/*set fd*/
 		max_sd = setFds();
 
@@ -222,6 +227,7 @@ void Webserv::launch( void )
 				std::cout << std::endl << BLUE << "===MASTER===" << RESET << std::endl;
 				/*accept connect*/
 				acceptConnection(i, READ);
+				//ok = 1;
 			}
 		}
 	
@@ -241,6 +247,6 @@ void Webserv::launch( void )
 			}
 		}
 		closeClientsFd(); // faux doit verifier keep alive
-		//std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
+		std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
 	}
 }

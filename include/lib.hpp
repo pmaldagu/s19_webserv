@@ -16,7 +16,8 @@
 # include <sys/ioctl.h>
 # include <functional>
 # include <arpa/inet.h>
-
+# include <fcntl.h>
+ 
 # include "Webserv.hpp"
 # include "Config.hpp"
 # include "Server.hpp"
