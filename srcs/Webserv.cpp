@@ -6,7 +6,7 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/02 18:34:41 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/04 13:32:49 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,11 +153,11 @@ void Webserv::acceptConnection(int index, int flag)
 	std::cout << YELLOW << "     -Socket fd : " << RESET << new_socket << std::endl;
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
 
-	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
-			throw std::runtime_error("ioctl() failed");
-	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
-			throw std::runtime_error("setsockopt() failed");
-	
+//	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
+//			throw std::runtime_error("ioctl() failed");
+//	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
+//			throw std::runtime_error("setsockopt() failed");
+
 	FD_SET(new_socket, &readfds);
 	FD_SET(new_socket, &writefds);
 	_clientfds.push_back(new_socket); ///must create class Client with fd and header
@@ -170,32 +170,20 @@ void Webserv::receiveRequest(int fd, int flag)
 	
 	memset(buffer, 0, 30001); //change 3000 par body size;
 
-	/*debug*/
-	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
-
 	if (flag == READ)
 		std::cout << YELLOW << "=> READ" << RESET << std::endl;
 	else
 		std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
 
-	//while(true)
-	//{
-		memset(buffer, 0, 30001); //change 3000 par body size;
-		ret = recv(fd, buffer, 30000, 0);
-		//if(ret < 0)
-		//	throw std::runtime_error("recv() failed");
+	memset(buffer, 0, 30001); //change 3000 par body size;
+	ret = recv(fd, buffer, 30000, 0);
+	if(ret < 0)
+		throw std::runtime_error("recv() failed");
 			//break;
 		
-		std::cout << GREEN << "-> Receive" << RESET << std::endl;
-		std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
-		//std::cout << GREEN << "   -Request :" << RESET << request << std::endl;
-		std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl;
-
-		//send(fd, greets.c_str(), greets.size(), 0);
-	//}
-	//std::cout << RED << "LOLOLOLOLOLOLOLOLOLOLO\n" << RESET << std::endl;
-	//if((send(fd, greets.c_str(), greets.size(), 0)) <= 0)
-	//	throw std::runtime_error("send() failed");
+	std::cout << GREEN << "-> Receive" << RESET << std::endl;
+	std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl;
 }
 
 void Webserv::closeClientsFd( void )
@@ -227,7 +215,6 @@ void Webserv::launch( void )
 			throw std::runtime_error("select() failed");
 		
 		/*check master side*/
-		//std::cout << std::endl << BLUE << "===MASTER===" << RESET << std::endl;
 		for (int i = 0; i < _masterfds.size(); i++)
 		{
 			if (FD_ISSET(_masterfds[i], &readfds))
@@ -236,35 +223,24 @@ void Webserv::launch( void )
 				/*accept connect*/
 				acceptConnection(i, READ);
 			}
-			if (FD_ISSET(_masterfds[i], &writefds))
-			{	
-				/*accept connect*/
-				acceptConnection(i, WRITE);
-			}			
 		}
 	
 		/*check client side*/
-		//std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
 		for (int i = 0; i < _clientfds.size(); i++)
 		{
+			if (FD_ISSET(_clientfds[i], &writefds))
+			{
+				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
+				receiveRequest(_clientfds[i], WRITE);
+			}
 			if (FD_ISSET(_clientfds[i], &readfds))
 			{
 				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
-				receiveRequest(_clientfds[i], READ);
-			//	break;
-			}
-			if (FD_ISSET(_clientfds[i], &writefds))
-			{
-				//send(_clientfds[i], greets.c_str(), greets.size(), 0);
-				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
-				receiveRequest(_clientfds[i], WRITE);
-				if((send(_clientfds[i], greets.c_str(), greets.size(), 0)) <= 0)
-					throw std::runtime_error("send() failed");
-
-				//break;
+				std::cout << YELLOW << "=> READ" << RESET << std::endl;
+				send(_clientfds[i], greets.c_str(), greets.size(), 0);
 			}
 		}
-		//closeClientsFd(); // faux doit verifier keep alive
-		std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
+		closeClientsFd(); // faux doit verifier keep alive
+		//std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
 	}
 }

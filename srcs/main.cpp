@@ -17,9 +17,9 @@ int main(int argc, char **argv)
             file->getServ()[a].debug();
         ////////////////////////////////////////////////
 
-        //Webserv web(file->getServ());
+        Webserv web(file->getServ());
 
-        //web.launch();
+        web.launch();
     }
     catch (std::exception &e)
     {

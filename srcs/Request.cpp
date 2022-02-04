@@ -148,6 +148,7 @@ void Request::debug( void )
 	}
 }
 
+/*DEBUG
 int main()
 {
 	int fd;
@@ -167,3 +168,4 @@ int main()
 	}
 	return 0;
 }
+*/
