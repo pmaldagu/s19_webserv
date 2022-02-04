@@ -6,13 +6,16 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/01 16:47:06 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/02 18:34:41 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/lib.hpp"
 
 // https://www.ibm.com/docs/en/i/7.4?topic=designs-example-nonblocking-io-select
+
+#define READ 0
+#define WRITE 1
 
 Webserv::Webserv()
 {
@@ -96,136 +99,172 @@ void Webserv::setListen( void )
 	}
 }
 
-
-void Webserv::launch( void )
+int Webserv::setFds( void )
 {
-	//Utiliser select()
-	int ret = -1;
-	int max_sd;
+	int max_sd = -1;
+
+	FD_ZERO(&readfds);
+	FD_ZERO(&writefds);
+
+	/*add master sockets*/
+	for	(int i = 0; i < _masterfds.size(); i++)
+	{
+		FD_SET(_masterfds[i], &readfds);
+		FD_SET(_masterfds[i], &writefds);
+		if (_masterfds[i] > max_sd)
+			max_sd = _masterfds[i];
+	}
+	/*add client socket*/
+	for (int i = 0; i < _clientfds.size(); i++)
+	{	
+		if (_clientfds[i] > 0)
+		{
+			FD_SET(_clientfds[i], &readfds);
+			FD_SET(_clientfds[i], &writefds);
+			if (_clientfds[i] > max_sd)
+				max_sd = _clientfds[i];
+		}
+	}
+	return (max_sd);
+}
+
+void Webserv::acceptConnection(int index, int flag)
+{
 	int new_socket;
-	char request[30001]; // change 3000 par max body size;
-	fd_set readfds;
-	fd_set writefds;
+	int on = 1;
+	int addrlen = sizeof(struct sockaddr_in);
+	
+	if (flag == READ)
+		std::cout << YELLOW << "=> READ" << RESET << std::endl;
+	else
+		std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
+
+	std::cout << GREEN << "-> New connection" << RESET << std::endl;
+	
+	new_socket = accept(_masterfds[index], (struct sockaddr *)&_servers[index].getSockaddr(), (socklen_t*)&addrlen);
+	if (new_socket < 0)
+		throw std::runtime_error("accept() failed");
+
+	std::cout << GREEN << "  -On port : " << RESET << _servers[index].getPort() << std::endl;
+	std::cout << GREEN << "  -Socket fd : " << RESET << _masterfds[index] << std::endl;
+	std::cout << GREEN << "  -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
+	std::cout << YELLOW << "  -> Client" << RESET << std::endl;
+	std::cout << YELLOW << "     -Port : " << RESET << ntohs(_servers[index].getSockaddr().sin_port) << std::endl;
+	std::cout << YELLOW << "     -Socket fd : " << RESET << new_socket << std::endl;
+	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
+
+	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
+			throw std::runtime_error("ioctl() failed");
+	if ((setsockopt(new_socket, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on))) < 0)
+			throw std::runtime_error("setsockopt() failed");
+	
+	FD_SET(new_socket, &readfds);
+	FD_SET(new_socket, &writefds);
+	_clientfds.push_back(new_socket); ///must create class Client with fd and header
+}
+
+void Webserv::receiveRequest(int fd, int flag)
+{
+	int ret = 1;
+	char buffer[30001]; // change 3000 par max body size ?;
+	
+	memset(buffer, 0, 30001); //change 3000 par body size;
 
 	/*debug*/
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
-	int addrlen = sizeof(struct sockaddr_in);
+
+	if (flag == READ)
+		std::cout << YELLOW << "=> READ" << RESET << std::endl;
+	else
+		std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
+
+	//while(true)
+	//{
+		memset(buffer, 0, 30001); //change 3000 par body size;
+		ret = recv(fd, buffer, 30000, 0);
+		//if(ret < 0)
+		//	throw std::runtime_error("recv() failed");
+			//break;
+		
+		std::cout << GREEN << "-> Receive" << RESET << std::endl;
+		std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
+		//std::cout << GREEN << "   -Request :" << RESET << request << std::endl;
+		std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl;
+
+		//send(fd, greets.c_str(), greets.size(), 0);
+	//}
+	//std::cout << RED << "LOLOLOLOLOLOLOLOLOLOLO\n" << RESET << std::endl;
+	//if((send(fd, greets.c_str(), greets.size(), 0)) <= 0)
+	//	throw std::runtime_error("send() failed");
+}
+
+void Webserv::closeClientsFd( void )
+{
+	for (int i = 0; i < _clientfds.size(); i++)
+	{
+		close(_clientfds[i]);
+	}
+	_clientfds.clear();
+}
+
+void Webserv::launch( void )
+{
+	int ret = -1;
+	int max_sd;
+	int new_socket;
+
+	/*debug*/
+	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
+
 	while (true)
 	{
-		max_sd = -1;
-		/*clear the socket set and buffer*/
-		FD_ZERO(&readfds);
-		FD_ZERO(&writefds);
-		memset(request, 0, 30001); //change 3000 par body size;
+		/*set fd*/
+		max_sd = setFds();
 
-		/*add master sockets*/
-		for	(int i = 0; i < _masterfds.size(); i++)
-		{
-			FD_SET(_masterfds[i], &readfds);
-			FD_SET(_masterfds[i], &writefds);
-			if (_masterfds[i] > max_sd)
-				max_sd = _masterfds[i];
-		}
-		/*add client socket*/
-		for (int i = 0; i < _clientfds.size(); i++)
-		{	
-			if (_clientfds[i] > 0)
-			{
-				FD_SET(_clientfds[i], &readfds);
-				FD_SET(_clientfds[i], &writefds);
-				if (_clientfds[i] > max_sd)
-					max_sd = _clientfds[i];
-			}
-		}
 		/*select*/
 		ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL);
-		if (ret < 0)
+		if (ret <= 0)
 			throw std::runtime_error("select() failed");
 		
 		/*check master side*/
-		std::cout << BLUE << "+++++++++++MASTER SIDE+++++++++++" << RESET << std::endl;
+		//std::cout << std::endl << BLUE << "===MASTER===" << RESET << std::endl;
 		for (int i = 0; i < _masterfds.size(); i++)
 		{
 			if (FD_ISSET(_masterfds[i], &readfds))
 			{
-				std::cout << YELLOW << "===========READ REQUEST==========\n" << RESET << std::endl;				
-				/*debug*/
-				//std::cout << "Il se passe quelque chose sur le port : " << ntohs(_servers[i].getSockaddr().sin_port) << std::endl;				
+				std::cout << std::endl << BLUE << "===MASTER===" << RESET << std::endl;
 				/*accept connect*/
-				if ((new_socket = accept(_masterfds[i], (struct sockaddr *)&_servers[i].getSockaddr(), (socklen_t*)&addrlen)) < 0)
-					throw std::runtime_error("accept() failed");				
-				/*receive request*/
-				std::cout << "RECEIVE" << std::endl;
-				if ((ret = recv(new_socket, request, 30000, 0)) < 0)
-					throw std::runtime_error("recv() failed");
-				std::cout << "END RECEIVE" << std::endl;
-				std::cout << request << std::endl;
-				// parser la request		
-				/*send message*/
-				if (send(new_socket, greets.c_str(), greets.size(), 0) != greets.size())
-					throw std::runtime_error("send() failed");
-				_clientfds.push_back(new_socket);
-				//FD_SET(_clientfds[_clientfds.size() - 1], &readfds);
+				acceptConnection(i, READ);
 			}
 			if (FD_ISSET(_masterfds[i], &writefds))
-			{
-				std::cout << YELLOW << "========WRITE REQUEST========\n" << RESET << std::endl;
-				/*debug*/
-				//std::cout << "Il se passe quelque chose sur le port : " << ntohs(_servers[i].getSockaddr().sin_port) << std::endl;
+			{	
 				/*accept connect*/
-				if ((new_socket = accept(_masterfds[i], (struct sockaddr *)&_servers[i].getSockaddr(), (socklen_t*)&addrlen)) < 0)
-					throw std::runtime_error("accept() failed");
-				/*receive request*/
-				if ((ret = recv(new_socket, request, 30000, 0)) < 0)
-					throw std::runtime_error("recv() failed");
-				std::cout << request << std::endl;
-				// parser la request		
-				/*send message*/
-				if (send(new_socket, greets.c_str(), greets.size(), 0) != greets.size())
-					throw std::runtime_error("send() failed");
-				_clientfds.push_back(new_socket);
-				//FD_SET(_clientfds[_clientfds.size() - 1], &readfds]);
+				acceptConnection(i, WRITE);
 			}			
-			std::cout << GREEN << "------------END MASTER-----------\n" << RESET << std::endl;
 		}
-		
+	
 		/*check client side*/
-		memset(request, 0, 30001); //change 3000 par body size;
-		std::cout << RED << "+++++++++++CLIENT SIDE+++++++++++" << RESET << std::endl;
+		//std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
 		for (int i = 0; i < _clientfds.size(); i++)
 		{
 			if (FD_ISSET(_clientfds[i], &readfds))
 			{
-				std::cout << YELLOW << "========READ activity=======\n" << RESET << std::endl;
-				if((recv(_clientfds[i], request, 30000, 0)) == 0)
-				{
-					std::cout << "Un client est EOF" << std::endl;
-					close(_clientfds[i]);
-					_clientfds[i] = 0;
-					FD_CLR(_clientfds[i], &readfds);
-				}
-				else
-					std::cout << request << std::endl;
+				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
+				receiveRequest(_clientfds[i], READ);
+			//	break;
 			}
 			if (FD_ISSET(_clientfds[i], &writefds))
 			{
-				std::cout << YELLOW << "========WRITE activity======\n" << RESET << std::endl;
-				std::cout << "RECEIVE" << std::endl;
-				if((recv(_clientfds[i], request, 30000, 0)) == 0)
-				{
-					std::cout << "Un client est EOF" << std::endl;
-					close(_clientfds[i]);
-					_clientfds[i] = 0;
-					FD_CLR(_clientfds[i], &writefds);
-				}
-				else
-					std::cout << request << std::endl;
-				std::cout << "END RECEIVE" << std::endl;
-			}
-			std::cout << GREEN << "------------END CLIENT-----------\n" << RESET << std::endl;
+				//send(_clientfds[i], greets.c_str(), greets.size(), 0);
+				std::cout << std::endl << RED << "===CLIENT===" << RESET << std::endl;
+				receiveRequest(_clientfds[i], WRITE);
+				if((send(_clientfds[i], greets.c_str(), greets.size(), 0)) <= 0)
+					throw std::runtime_error("send() failed");
 
+				//break;
+			}
 		}
+		//closeClientsFd(); // faux doit verifier keep alive
 		std::cout << GREEN << "------------END LOOP-----------\n" << RESET << std::endl;
-		
 	}
 }

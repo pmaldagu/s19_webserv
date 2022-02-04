@@ -19,13 +19,22 @@ class Webserv
 		void bindSocket( void );
 		void setListen( void );
 		void initializePoll( void );
-		/*multiplexer*/
+		
+		/*Multiplexer*/
 		void launch( void );
+		int setFds( void );
+		void acceptConnection(int index, int flag);
+		void receiveRequest(int fd, int flag);
+
+		/*Close*/
+		void closeClientsFd( void );
 
 	private:
 		std::vector<class Server> _servers;
 		std::vector<int>  _masterfds;
 		std::vector<int>  _clientfds;
+		fd_set						readfds;
+		fd_set						writefds;
 
 };
 
