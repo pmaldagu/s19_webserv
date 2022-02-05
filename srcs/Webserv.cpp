@@ -225,8 +225,8 @@ void Webserv::launch( void )
 				std::cout << RED << "\n===CLIENT===" << RESET << std::endl;
 				std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
 				send(_clientfds[i], greets.c_str(), greets.size(), 0);
-				std::cout << GREEN << "-> Receive" << RESET << std::endl;
-				//std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
+				std::cout << GREEN << "-> Send" << RESET << std::endl;
+				std::cout << GREEN << "  -Socket fd : " << RESET << _clientfds[i] << std::endl;
 				std::cout << GREEN << "  -Message : " << RESET << std::endl << greets << std::endl;
 				closeClientsFd(); // faux doit verifier keep alive
 				break;
