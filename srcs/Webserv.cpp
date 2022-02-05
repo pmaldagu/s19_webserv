@@ -12,18 +12,16 @@
 
 #include "../include/lib.hpp"
 
-// https://www.ibm.com/docs/en/i/7.4?topic=designs-example-nonblocking-io-select
-
-#define READ 0
-#define WRITE 1
-
-Webserv::Webserv()
+Webserv::Webserv() : on(1)
 {
 	throw std::runtime_error("no config file");
 }
 
-Webserv::Webserv( std::vector<class Server> const& servers ) : _servers(servers)
+Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 {
+	for (int i = 0; i < servers.size(); i++)
+		_servers.push_back(servers[i]);
+	
 	try
 	{
 		createSocket();
@@ -36,65 +34,81 @@ Webserv::Webserv( std::vector<class Server> const& servers ) : _servers(servers)
 		std::cerr << e.what() << std::endl;
 		throw std::runtime_error("Initialization failure");
 	}
-
 }
 
 Webserv::Webserv( Webserv const& copy )
 {
-	_servers = copy._servers;
-	_masterfds = copy._masterfds;
-	_clientfds = copy._clientfds;
+	*this = copy;
 }
 
+Webserv& Webserv::operator=(Webserv const& copy)
+{
+	if (this != &copy)
+	{
+		this->on = copy.on;
+		this->_servers = copy._servers;
+		this->_clients = copy._clients;
+		this->readfds = copy.readfds;
+		this->writefds = copy.writefds;
+	}
+	return (*this);
+}
+		
 Webserv::~Webserv( void )
 {
-	for (int i = 0; i < _masterfds.size(); i++)
-		close(_masterfds[i]);
-	for (int i = 0; i < _clientfds.size(); i++)
-		close(_clientfds[i]);
+	/* voir destructor de client et server*/
 }
 
 /*Socket management*/
 void Webserv::createSocket( void )
 {
-	int on = 1;
-	
-	for(int index = 0 ; index < _servers.size(); index++) 
+	std::list<class Server>::iterator it = _servers.begin();
+
+	for ( ; it != _servers.end(); it++)
 	{
-		_masterfds.push_back(socket(AF_INET, SOCK_STREAM, 0)); //create socket
-		if (_masterfds[index] < 0)
+		/*create socket*/
+		(*it).setFd(socket(AF_INET, SOCK_STREAM, 0));
+		if ((*it).getFd() < 0)
 			throw std::runtime_error("socket() failed");
-		if ((setsockopt(_masterfds[index], SOL_SOCKET,  SO_REUSEADDR, // allow to be reusable
-                  (char *)&on, sizeof(on))) < 0)
+
+		/*set as reusable*/
+		int mem = 1;
+		if ((setsockopt((*it).getFd(), SOL_SOCKET,  SO_REUSEADDR, (char *)&mem, sizeof(mem))) < 0)
 			throw std::runtime_error("setsockopt() failed");
 	}
 }
 
 void Webserv::setNonblocking( void )
 {
-	int on = 1;
+	std::list<class Server>::iterator it = _servers.begin();
 
-	for(int index = 0 ; index < _servers.size(); index++) 
+	for ( ; it != _servers.end(); it++)
 	{
-		if ((ioctl(_masterfds[index] , FIONBIO, (char *)&on)) < 0)
+		int mem = 1;
+		if ((ioctl((*it).getFd() , FIONBIO, (char *)&mem)) < 0) //&ON A VERIF!!!!!!
 			throw std::runtime_error("ioctl() failed");
 	}
 }
 
 void Webserv::bindSocket( void )
 {
-	for(int index = 0 ; index < _servers.size(); index++) 
+	std::list<class Server>::iterator it = _servers.begin();
+
+	for ( ; it != _servers.end(); it++)
 	{
-		if ((bind(_masterfds[index], (struct sockaddr *)&_servers[index].getSockaddr(), sizeof(struct sockaddr_in))) < 0)
+		if ((bind((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), 
+				sizeof(struct sockaddr_in))) < 0)
 			throw std::runtime_error("bind() failed");
 	}
 }
 
 void Webserv::setListen( void )
 {
-	for(int index = 0 ; index < _servers.size(); index++) 
+	std::list<class Server>::iterator it = _servers.begin();
+
+	for ( ; it != _servers.end(); it++)
 	{
-		if ((listen(_masterfds[index], 32)) < 0) //32 pending connection possible maybe too much ??
+		if ((listen((*it).getFd(), 32)) < 0) //32 pending connection maybe too much ??
 			throw std::runtime_error("listen() failed");
 	}
 }
@@ -103,89 +117,114 @@ int Webserv::setFds( void )
 {
 	int max_sd = -1;
 
+	/*clear fd set*/
 	FD_ZERO(&readfds);
 	FD_ZERO(&writefds);
 
 	/*add master sockets*/
-	for	(int i = 0; i < _masterfds.size(); i++)
+	std::list<class Server>::iterator srv = _servers.begin();	
+	for	( ; srv != _servers.end(); srv++)
 	{
-		FD_SET(_masterfds[i], &readfds);
-		FD_SET(_masterfds[i], &writefds);
-		if (_masterfds[i] > max_sd)
-			max_sd = _masterfds[i];
+		//std::cout << "LOL" << std::endl;
+		FD_SET((*srv).getFd(), &readfds);
+		FD_SET((*srv).getFd(), &writefds);
+		if ((*srv).getFd() > max_sd)
+			max_sd = (*srv).getFd();
 	}
+
 	/*add client socket*/
-	for (int i = 0; i < _clientfds.size(); i++)
+	std::list<class Client>::iterator clt = _clients.begin();	
+	for ( ; clt != _clients.end(); clt++)
 	{	
-		if (_clientfds[i] > 0)
+		if ((*clt).getFd() > 0)
 		{
-			FD_SET(_clientfds[i], &readfds);
-			FD_SET(_clientfds[i], &writefds);
-			if (_clientfds[i] > max_sd)
-				max_sd = _clientfds[i];
+			FD_SET((*clt).getFd(), &readfds);
+			FD_SET((*clt).getFd(), &writefds);
+			if ((*clt).getFd() > max_sd)
+				max_sd = (*clt).getFd();
 		}
 	}
 	return (max_sd);
 }
 
-void Webserv::acceptConnection(int index, int flag)
+void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string set)
 {
 	int new_socket;
-	int on = 1;
 	int addrlen = sizeof(struct sockaddr_in);
-	
-	if (flag == READ)
-		std::cout << YELLOW << "=> READ" << RESET << std::endl;
-	else
-		std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
 
-	std::cout << GREEN << "-> New connection" << RESET << std::endl;
-	
-	new_socket = accept(_masterfds[index], (struct sockaddr *)&_servers[index].getSockaddr(), (socklen_t*)&addrlen);
+	/*accept*/	
+	new_socket = accept((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), (socklen_t*)&addrlen);
 	if (new_socket < 0)
 		throw std::runtime_error("accept() failed");
+	
+	/*set non blocking*/
+	int mem = 1;
+	if ((ioctl(new_socket, FIONBIO, (char *)&mem)) < 0)
+		throw std::runtime_error("ioctl() failed");
 
-	std::cout << GREEN << "  -On port : " << RESET << _servers[index].getPort() << std::endl;
-	std::cout << GREEN << "  -Socket fd : " << RESET << _masterfds[index] << std::endl;
-	std::cout << GREEN << "  -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
+	/*set as reusable*/
+	int opt = 1;
+	if ((setsockopt((*it).getFd(), SOL_SOCKET,  SO_REUSEADDR, (char *)&opt, sizeof(opt))) < 0)
+		throw std::runtime_error("setsockopt() failed");
+	
+	/*create new client*/
+	_clients.push_back(Client(new_socket, (*it).getFd()));
+
+	/*print info*/
+	std::cout << BLUE << "===MASTER===" << RESET << std::endl;
+	std::cout << YELLOW << "=> " << set << RESET << std::endl;
+	std::cout << GREEN << "-> New connection" << RESET << std::endl;
+	std::cout << GREEN << "  -On port : " << RESET << (*it).getPort() << std::endl;
+	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
+	std::cout << GREEN << "  -Ip : " << RESET << inet_ntoa((*it).getSockaddr().sin_addr) << std::endl;
 	std::cout << YELLOW << "  -> Client" << RESET << std::endl;
-	std::cout << YELLOW << "     -Port : " << RESET << ntohs(_servers[index].getSockaddr().sin_port) << std::endl;
+	std::cout << YELLOW << "     -Port : " << RESET << ntohs((*it).getSockaddr().sin_port) << std::endl;
 	std::cout << YELLOW << "     -Socket fd : " << RESET << new_socket << std::endl;
-	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa(_servers[index].getSockaddr().sin_addr) << std::endl;
-
-	if ((ioctl(new_socket, FIONBIO, (char *)&on)) < 0)
-			throw std::runtime_error("ioctl() failed");
-
-	_clientfds.push_back(new_socket); ///must create class Client with fd and header
+	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa((*it).getSockaddr().sin_addr) << std::endl;
 }
 
-void Webserv::receiveRequest(int fd, int flag)
+void Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
-	int ret = 1;
 	char buffer[30001]; // change 3000 par max body size ?;
-	
-	if (flag == READ)
-		std::cout << YELLOW << "=> READ" << RESET << std::endl;
-	else
-		std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
 
-	memset(buffer, 0, 30001); //change 3000 par body size;
-	ret = recv(fd, buffer, 30000, 0);
-	if(ret < 0)
+	/*receive*/
+	memset(buffer, 0, 30001);
+	if((recv((*it).getFd(), buffer, 30000, 0)) <= 0)
 		throw std::runtime_error("recv() failed");
-		
+	
+	/*link request to client*/
+	(*it).setRequest(Request(buffer));
+
+	/*print info*/		
+	std::cout << RED << "===CLIENT===" << RESET << std::endl;
+	std::cout << YELLOW << "=> READ" << RESET << std::endl;
 	std::cout << GREEN << "-> Receive" << RESET << std::endl;
-	std::cout << GREEN << "  -Socket fd : " << RESET << fd << std::endl;
+	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
+	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
 	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer;
 }
 
-void Webserv::closeClientsFd( void )
+void Webserv::sendResponse(std::list<class Client>::iterator it)
 {
-	for (int i = 0; i < _clientfds.size(); i++)
-	{
-		close(_clientfds[i]);
-	}
-	_clientfds.clear();
+	/*debug*/
+	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
+
+	/*send*/
+	if((send((*it).getFd(), greets.c_str(), greets.size(), 0)) <= 0)//TODO send request
+		throw std::runtime_error("send() failed");
+
+	/*print info*/		
+	std::cout << RED << "===CLIENT===" << RESET << std::endl;
+	std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
+	std::cout << GREEN << "-> Send" << RESET << std::endl;
+	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
+	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << greets << std::endl; //TODO A CHANGER
+
+	/*close client*/
+	close((*it).getFd());
+	_clients.erase(it);
+	
 }
 
 void Webserv::launch( void )
@@ -193,59 +232,48 @@ void Webserv::launch( void )
 	int ret = -1;
 	int max_sd;
 	int new_socket;
-	int req = 0;
-
-	/*debug*/
-	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 
 	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)
 	{
-		//ok = 0;
 		/*set fd*/
 		max_sd = setFds();
-		req = 0;
 
 		/*select*/
 		ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL);
-		if (ret <= 0)
+	
+		if (ret > 0)
+		{	
+			/*check client side*/
+			std::list<class Client>::iterator clt = _clients.begin();
+			for ( ; clt != _clients.end(); clt++)
+			{
+				/*set as read*/
+				if (FD_ISSET((*clt).getFd(), &readfds))
+					receiveRequest(clt);
+				/*set as write*/
+				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
+				{
+					sendResponse(clt);
+					break; //TODO A ENLEVER ET RECUP IT DE SENDRESPONSE
+				}
+			}
+
+			/*check master side*/
+			std::list<class Server>::iterator srv = _servers.begin();
+			for ( ; srv != _servers.end(); srv++)
+			{
+				/*set as read*/
+				if (FD_ISSET((*srv).getFd(), &readfds))
+					acceptConnection(srv, "READ");
+			}
+			std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
+			usleep(200);
+		}
+		else
+		{
+			/*TODO relance the multiplexer*/
 			throw std::runtime_error("select() failed");
-		
-		/*check client side*/
-		for (int i = 0; i < _clientfds.size(); i++)
-		{
-			if (FD_ISSET(_clientfds[i], &readfds))
-			{
-				std::cout << RED << "\n===CLIENT===" << RESET << std::endl;
-				receiveRequest(_clientfds[i], READ);
-				req = 1;
-			}
-			if (FD_ISSET(_clientfds[i], &writefds) && req == 1)
-			{
-				std::cout << RED << "\n===CLIENT===" << RESET << std::endl;
-				std::cout << YELLOW << "=> WRITE" << RESET << std::endl;
-				send(_clientfds[i], greets.c_str(), greets.size(), 0);
-				std::cout << GREEN << "-> Send" << RESET << std::endl;
-				std::cout << GREEN << "  -Socket fd : " << RESET << _clientfds[i] << std::endl;
-				std::cout << GREEN << "  -Message : " << RESET << std::endl << greets << std::endl;
-				closeClientsFd(); // faux doit verifier keep alive
-				break;
-			}
-
 		}
-
-		/*check master side*/
-		for (int i = 0; i < _masterfds.size(); i++)
-		{
-			if (FD_ISSET(_masterfds[i], &readfds))
-			{
-				std::cout << BLUE << "\n===MASTER===" << RESET << std::endl;
-				/*accept connect*/
-				acceptConnection(i, READ);
-				break;
-			}
-		}
-		//std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
-		usleep(200);
 	}
 }

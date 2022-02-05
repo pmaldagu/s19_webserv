@@ -12,7 +12,7 @@ Request::Request(char* buffer)
 	parseType();
 	parsePath();
 	parseAccept();
-	debug();
+	//debug();
 }
 
 Request::Request(Request const& copy)
@@ -28,10 +28,10 @@ Request& Request::operator=(Request const& copy)
 {
     if (this != &copy)
     {
-		this->_buffer = copy._buffer;
-        this->_type = copy._type;
-        this->_path = copy._path;
-        this->_accept = copy._accept;
+			this->_buffer = copy._buffer;
+			this->_type = copy._type;
+      this->_path = copy._path;
+      this->_accept = copy._accept;
     }
     return (*this);
 }
@@ -147,25 +147,3 @@ void Request::debug( void )
 		i++;
 	}
 }
-
-/*DEBUG
-int main()
-{
-	int fd;
-	char buffer[30001];
-
-	memset(buffer, 0, 30001);
-	fd = open("./test/request", O_RDONLY);
-	read(fd, buffer, 30000);
-	close(fd);
-	try
-	{
-		Request test(buffer);
-	}
-	catch (std::exception & e)
-	{
-		std::cout << RED << "ERROR : " << RESET << e.what() << std::endl;
-	}
-	return 0;
-}
-*/

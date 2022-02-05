@@ -13,6 +13,8 @@ class Webserv
 
 		Webserv& operator=(Webserv const& copy);
 
+		char on; //UTILE ??
+
 		/*Socket management*/
 		void createSocket( void );
 		void setNonblocking( void );
@@ -23,16 +25,13 @@ class Webserv
 		/*Multiplexer*/
 		void launch( void );
 		int setFds( void );
-		void acceptConnection(int index, int flag);
-		void receiveRequest(int fd, int flag);
-
-		/*Close*/
-		void closeClientsFd( void );
+		void acceptConnection(std::list<class Server>::iterator it, std::string set);
+		void receiveRequest(std::list<class Client>::iterator it);
+		void sendResponse(std::list<class Client>::iterator it);
 
 	private:
-		std::vector<class Server> _servers;
-		std::vector<int>  _masterfds;
-		std::vector<int>  _clientfds;
+		std::list<class Server> _servers;
+		std::list<class Client> _clients;
 		fd_set						readfds;
 		fd_set						writefds;
 

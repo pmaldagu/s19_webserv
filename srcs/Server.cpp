@@ -49,6 +49,12 @@ Server& Server::operator=(Server const& copy)
     return (*this);
 }
 
+/*setter*/
+void Server::setFd(int fd)
+{
+	this->_fd = fd;
+}
+
 void Server::setRoot(std::string myroot)
 {
     myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
@@ -145,6 +151,12 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     this->_location_vector.push_back(*newLocation);
     delete newLocation;
     return (it);
+}
+
+/*getter*/
+int Server::getFd() const
+{
+		return (this->_fd);
 }
 
 std::string Server::getRoot() const

@@ -12,6 +12,8 @@ class Server
 
         Server&                             operator=(Server const& copy);
 
+				/*setter*/
+				void																setFd(int fd);
         void                                setRoot(std::string myroot);
         void                                setPort(std::string myport);
         void                                setHost(std::string myhost);
@@ -22,6 +24,8 @@ class Server
         std::vector<std::string>::iterator  setLocation(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2);
         void                                setSockaddr();
 
+				/*getter*/
+				int																	getFd() const;
         std::string                         getRoot() const;
         std::string                         getPort() const;
         std::string                         getHost() const;
@@ -32,9 +36,11 @@ class Server
         std::vector<class Location>         getLocation() const;
         struct sockaddr_in&                 getSockaddr();
 
+				/*debug*/
         void                                debug() const;
 
     private:
+				int																	_fd;
         std::string                         _root;
         std::string                         _port;
         std::string                         _host;
