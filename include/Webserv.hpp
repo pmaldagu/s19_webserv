@@ -15,6 +15,9 @@ class Webserv
 
 		char on; //UTILE ??
 
+		/*getter*/
+		class Server& getServer(int fd);
+
 		/*Socket management*/
 		void createSocket( void );
 		void setNonblocking( void );

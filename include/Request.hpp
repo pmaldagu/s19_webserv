@@ -32,6 +32,9 @@ class Request
 		std::string getPath( void ) const;
 		std::vector<std::string> getAccept( void ) const;
 
+		/*respond*/
+		std::string respond(class Server& srv);
+		
 		/*debug*/
 		void debug( void );
 			

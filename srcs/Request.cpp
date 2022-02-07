@@ -126,6 +126,23 @@ std::vector<std::string> Request::getAccept( void ) const
 	return (this->_accept);
 }
 
+/*respond*/
+std::string Request::respond(class Server& srv)
+{
+	std::vector<class Location>::iterator it = srv.getLocation().begin();
+
+	/*debug*/
+	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
+	std::string notfound = "HTTP/1.1 404\nContent-type: text/plain\nContent-Length: 12\n\n404 Not Found";
+	
+	for ( ; it != srv.getLocation().end(); it++)
+	{
+		if ((*it).getPath() == this->_path)
+			return (greets);
+	}
+	return (notfound);
+}
+
 /*debug*/
 void Request::debug( void )
 {

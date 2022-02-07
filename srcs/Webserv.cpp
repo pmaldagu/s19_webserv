@@ -59,6 +59,21 @@ Webserv::~Webserv( void )
 	/* voir destructor de client et server*/
 }
 
+/*getter*/
+class Server& Webserv::getServer(int fd)
+{
+	std::list<class Server>::iterator it;
+
+	for ( ; it != _servers.end(); it++)
+	{
+		if ((*it).getFd() == fd)
+			return (*it);
+		else
+			throw std::runtime_error("server not found");
+	}
+	return (*(_servers.begin()));
+}
+			
 /*Socket management*/
 void Webserv::createSocket( void )
 {
@@ -72,8 +87,8 @@ void Webserv::createSocket( void )
 			throw std::runtime_error("socket() failed");
 
 		/*set as reusable*/
-		int mem = 1;
-		if ((setsockopt((*it).getFd(), SOL_SOCKET,  SO_REUSEADDR, (char *)&mem, sizeof(mem))) < 0)
+		int opt = 1;
+		if ((setsockopt((*it).getFd(), SOL_SOCKET,  SO_REUSEADDR, (char *)&opt, sizeof(opt))) < 0)
 			throw std::runtime_error("setsockopt() failed");
 	}
 }
@@ -125,7 +140,6 @@ int Webserv::setFds( void )
 	std::list<class Server>::iterator srv = _servers.begin();	
 	for	( ; srv != _servers.end(); srv++)
 	{
-		//std::cout << "LOL" << std::endl;
 		FD_SET((*srv).getFd(), &readfds);
 		FD_SET((*srv).getFd(), &writefds);
 		if ((*srv).getFd() > max_sd)
@@ -206,11 +220,10 @@ void Webserv::receiveRequest(std::list<class Client>::iterator it)
 
 void Webserv::sendResponse(std::list<class Client>::iterator it)
 {
-	/*debug*/
-	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
-
 	/*send*/
-	if((send((*it).getFd(), greets.c_str(), greets.size(), 0)) <= 0)//TODO send request
+	std::string buffer =(*it).getRequest().respond(getServer((*it).getListen()));
+	if ((send((*it).getFd(), buffer.c_str(), buffer.size(), 0)) <= 0)
+	//if((send((*it).getFd(), greets.c_str(), greets.size(), 0)) <= 0)//TODO send request
 		throw std::runtime_error("send() failed");
 
 	/*print info*/		
@@ -219,7 +232,7 @@ void Webserv::sendResponse(std::list<class Client>::iterator it)
 	std::cout << GREEN << "-> Send" << RESET << std::endl;
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
-	std::cout << GREEN << "  -Message : " << RESET << std::endl << greets << std::endl; //TODO A CHANGER
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl; //TODO A CHANGER
 
 	/*close client*/
 	close((*it).getFd());
