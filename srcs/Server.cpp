@@ -184,7 +184,7 @@ std::string Server::getCmaxsize() const
     return (this->_client_max_body_size);
 }
 
-const std::vector<class Location>& Server::getLocation() const
+std::vector<class Location> Server::getLocation() const
 {
     return (this->_location_vector);
 }

@@ -62,7 +62,7 @@ Webserv::~Webserv( void )
 /*getter*/
 class Server& Webserv::getServer(int fd)
 {
-	std::list<class Server>::iterator it;
+	std::list<class Server>::iterator it = _servers.begin();
 
 	for ( ; it != _servers.end(); it++)
 	{
@@ -220,8 +220,10 @@ void Webserv::receiveRequest(std::list<class Client>::iterator it)
 
 void Webserv::sendResponse(std::list<class Client>::iterator it)
 {
+	/*debug*/
+	//std::string buffer = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 	/*send*/
-	std::string buffer =(*it).getRequest().respond(getServer((*it).getListen()));
+	std::string buffer = (*it).getRequest().respond(getServer((*it).getListen()));
 	if ((send((*it).getFd(), buffer.c_str(), buffer.size(), 0)) <= 0)
 	//if((send((*it).getFd(), greets.c_str(), greets.size(), 0)) <= 0)//TODO send request
 		throw std::runtime_error("send() failed");
@@ -280,7 +282,7 @@ void Webserv::launch( void )
 				if (FD_ISSET((*srv).getFd(), &readfds))
 					acceptConnection(srv, "READ");
 			}
-			std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
+			//std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
 			usleep(200);
 		}
 		else

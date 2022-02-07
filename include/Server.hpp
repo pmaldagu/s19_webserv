@@ -33,7 +33,7 @@ class Server
         std::string                         getCmaxsize() const;
         std::string                         getServername() const;
         std::string                         getRedirection() const;
-        const std::vector<class Location>&  getLocation() const;
+        std::vector<class Location>         getLocation() const;
         struct sockaddr_in&                 getSockaddr();
 
 				/*debug*/

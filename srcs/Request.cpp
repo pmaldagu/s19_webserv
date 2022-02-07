@@ -63,7 +63,7 @@ void Request::parsePath( void )
 	size_t ret = 0;
 
 	ret = _buffer[0].find(" ");
-	this->_path = _buffer[0].substr(ret + 1 , _buffer[0].find(" ", ret + 1) - ret);
+	this->_path = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
 }
 
 void Request::parseAccept( void )
@@ -133,7 +133,8 @@ std::string Request::respond(class Server& srv)
 
 	/*debug*/
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
-	std::string notfound = "HTTP/1.1 404\nContent-type: text/plain\nContent-Length: 12\n\n404 Not Found";
+	std::string notfound = "HTTP/1.1 404\nContent-type: text/plain\nContent-Length: 13\n\n404 Not Found";
+	
 	
 	for ( ; it != srv.getLocation().end(); it++)
 	{
