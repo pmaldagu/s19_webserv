@@ -87,7 +87,7 @@ void Config::setServ()
     }
 }
 
-std::vector<class  Server> Config::getServ() const
+std::vector<class  Server>& Config::getServ()
 {
     return (this->_serv_vector);
 }

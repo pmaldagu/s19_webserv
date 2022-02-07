@@ -11,23 +11,22 @@ class Client
 			Client(Client const& copy);
 			virtual ~Client();
 
-			Client& operator=(Client const& copy);
+			Client&			operator=(Client const& copy);
 
 			/*setter*/
-			void setRequest(class Request newRequest);
+			void			setRequest(class Request newRequest);
 
 			/*getter*/
-			int	getListen( void ) const;
-			int getFd( void ) const;
-			class Request& getRequest( void ) const;
-
-			bool isReady( void ) const;
+			int				getListen( void ) const;
+			int				getFd( void ) const;
+			class Request&	getRequest( void ) const;
+			bool 			isReady( void ) const;
 
     private :
 			bool			_ready;
 			int				_listen;
 			int				_fd;
-			Request*	_req;
+			Request*		_req;
 };
 
 #endif

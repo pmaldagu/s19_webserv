@@ -126,20 +126,36 @@ std::vector<std::string> Request::getAccept( void ) const
 	return (this->_accept);
 }
 
+bool Request::checkMethod(Location& location)
+{
+	if (this->_type == "GET")
+		return (location.getGetMethod());
+	else if (this->_type == "POST")
+		return (location.getPostMethod());
+	else if (this->_type == "DELETE")
+		return (location.getDeleteMethod());
+	else
+		return (false);
+}
+
 /*respond*/
 std::string Request::respond(class Server& srv)
 {
 	std::vector<class Location>::iterator it = srv.getLocation().begin();
 
 	/*debug*/
+	std::string badMethod = "HTTP/1.1 300\nContent-type: text/plain\nContent-Length: 11\n\nBad Method.";
 	std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
 	std::string notfound = "HTTP/1.1 404\nContent-type: text/plain\nContent-Length: 13\n\n404 Not Found";
-	
 	
 	for ( ; it != srv.getLocation().end(); it++)
 	{
 		if ((*it).getPath() == this->_path)
+		{
+			if (!checkMethod(*it))
+				return (badMethod);
 			return (greets);
+		}
 	}
 	return (notfound);
 }

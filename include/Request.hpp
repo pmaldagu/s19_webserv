@@ -11,39 +11,41 @@ class Request
         Request(Request const& copy);
         virtual ~Request();
 
-        Request& operator=(Request const& copy);
+        Request&					operator=(Request const& copy);
 
 		/*parser*/
-		void splitBuffer(char *buffer);
-		//void parse( void );
-		void parseType( void );
-		void parsePath( void );
-		void parseAccept( void );
+		void						splitBuffer(char *buffer);
+		//void 						parse( void );
+		void						parseType( void );
+		void						parsePath( void );
+		void						parseAccept( void );
 
 		/*setter
-		void setType(std::string type);
-		void setPath(std::string path);
-		void setAccept(std::string accept);
+		void						setType(std::string type);
+		void						setPath(std::string path);
+		void						setAccept(std::string accept);
 		*/
 
 		/*getter*/
-		std::vector<std::string> getBuffer( void ) const;
-		std::string getType( void ) const;
-		std::string getPath( void ) const;
-		std::vector<std::string> getAccept( void ) const;
+		std::vector<std::string>	getBuffer( void ) const;
+		std::string					getType( void ) const;
+		std::string					getPath( void ) const;
+		std::vector<std::string>	getAccept( void ) const;
 
 		/*respond*/
-		std::string respond(class Server& srv);
+		std::string					respond(class Server& srv);
 		
+		/*check method*/
+		bool						checkMethod(Location& location);
+
 		/*debug*/
-		void debug( void );
-			
+		void						debug( void );
 
     private :
-		std::vector<std::string> _buffer;
-		std::string	_type;
-		std::string _path;
-		std::vector<std::string> _accept;
+		std::vector<std::string>	_buffer;
+		std::string					_type;
+		std::string					_path;
+		std::vector<std::string>	_accept;
 		
 };
 

@@ -14,7 +14,7 @@ class Config
 
         void                        setServ();
 
-        std::vector<class Server>   getServ() const;
+        std::vector<class Server>&  getServ();
 
     private :
         Config();

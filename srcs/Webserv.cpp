@@ -68,9 +68,8 @@ class Server& Webserv::getServer(int fd)
 	{
 		if ((*it).getFd() == fd)
 			return (*it);
-		else
-			throw std::runtime_error("server not found");
 	}
+	throw std::runtime_error("server not found");
 	return (*(_servers.begin()));
 }
 			

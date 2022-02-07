@@ -184,7 +184,7 @@ std::string Server::getCmaxsize() const
     return (this->_client_max_body_size);
 }
 
-std::vector<class Location> Server::getLocation() const
+std::vector<class Location>& Server::getLocation()
 {
     return (this->_location_vector);
 }
@@ -204,7 +204,7 @@ struct sockaddr_in& Server::getSockaddr()
     return (this->_address);
 }
 
-void Server::debug() const
+void Server::debug()
 {
     ///// Print Server //////
     std::cout << GREEN << "-> Server " << RESET << this << std::endl;
