@@ -29,8 +29,8 @@ class Webserv
 		void launch( void );
 		int setFds( void );
 		void acceptConnection(std::list<class Server>::iterator it, std::string set);
-		void receiveRequest(std::list<class Client>::iterator it);
-		void sendResponse(std::list<class Client>::iterator it);
+		bool receiveRequest(std::list<class Client>::iterator it);
+		std::list<class Client>::iterator sendResponse(std::list<class Client>::iterator it);
 
 	private:
 		std::list<class Server> _servers;

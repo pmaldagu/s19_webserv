@@ -7,6 +7,7 @@ Location::Location()
     this->_error_page = "";
     this->_upload_dir = "";
     this->_root = "";
+    this->_redirection = "";
     this->_get_method = false;
     this->_post_method = false;
     this->_delete_method = false;
@@ -31,6 +32,7 @@ Location& Location::operator=(Location const& copy)
         this->_get_method = copy._get_method;
         this->_post_method = copy._post_method;
         this->_delete_method = copy._delete_method;
+        this->_redirection = copy._redirection;
     }
     return (*this);
 }
@@ -69,6 +71,13 @@ void Location::setRoot(std::string root)
     root.erase(std::remove_if(root.begin(), root.end(), isspace), root.end());
     root.erase(0, 4);
     this->_root = root;
+}
+
+void Location::setRedirection(std::string redirection)
+{
+    redirection.erase(std::remove_if(redirection.begin(), redirection.end(), isspace), redirection.end());
+    redirection.erase(0, 6);
+    this->_redirection = redirection;
 }
 
 void Location::setGetMethod(bool b)
@@ -112,6 +121,11 @@ std::string Location::getUploadDir() const
 std::string Location::getRoot() const
 {
     return (this->_root);
+}
+
+std::string Location::getRedirection() const
+{
+    return (this->_redirection);
 }
 
 bool Location::getGetMethod() const

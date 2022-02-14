@@ -1,12 +1,5 @@
 #include "../include/lib.hpp"
 
-// size_file = cpy.size_file;
-// _nport = cpy._nport;
-// _cgi_path = cpy._cgi_path;
-// _cgi_extension = cpy._cgi_extension;
-// _http_redirection[0] = cpy._http_redirection[0];
-// _http_redirection[1] = cpy._http_redirection[1];
-
 Server::Server()
 {
     this->_root = "";
@@ -137,6 +130,8 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
             newLocation->setErrorPage(*it);
         else if ((*it).find("upload_dir") != std::string::npos)
             newLocation->setUploadDir(*it);
+        else if ((*it).find("return") != std::string::npos)
+            newLocation->setRedirection(*it);
         else if ((*it).find("http_methods") != std::string::npos)
         {
             if ((*it).find("GET") != std::string::npos)
@@ -147,6 +142,12 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
                 newLocation->setDeleteMethod(true);
         }
         it++;
+    }
+    if (newLocation->getGetMethod() == 0 && newLocation->getPostMethod() == 0 && newLocation->getDeleteMethod() == 0)
+    {
+       newLocation->setGetMethod(true);
+       newLocation->setPostMethod(true);
+       newLocation->setDeleteMethod(true);
     }
     this->_location_vector.push_back(*newLocation);
     delete newLocation;
@@ -226,6 +227,7 @@ void Server::debug()
         std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
         std::cout << YELLOW << "      -Error page : " << RESET << this->getLocation()[a].getErrorPage() << std::endl;
         std::cout << YELLOW << "      -Upload Dir : " << RESET << this->getLocation()[a].getUploadDir() << std::endl;
+        std::cout << YELLOW << "      -Return : " << RESET << this->getLocation()[a].getRedirection() << std::endl;
         std::cout << YELLOW << "      -Get method : " << RESET << this->getLocation()[a].getGetMethod() << std::endl;
         std::cout << YELLOW << "      -Post method : " << RESET << this->getLocation()[a].getPostMethod() << std::endl;
         std::cout << YELLOW << "      -Delete method : " << RESET << this->getLocation()[a].getDeleteMethod() << std::endl;

@@ -15,6 +15,7 @@ class Request
 
 		/*parser*/
 		void						splitBuffer(char *buffer);
+		void						parseHttpVersion();
 		//void 						parse( void );
 		void						parseType( void );
 		void						parsePath( void );
@@ -28,29 +29,35 @@ class Request
 
 		/*getter*/
 		std::vector<std::string>	getBuffer( void ) const;
-		std::string								getType( void ) const;
-		std::string								getPath( void ) const;
+		std::string					getType( void ) const;
+		std::string					getPath( void ) const;
 		std::vector<std::string>	getAccept( void ) const;
+		std::string					getHttpver( void ) const;
+		std::string					getContent( void ) const;
 
 		/*respond*/
-		std::string								returnFile(class Server& srv
-		std::string								createHeader(class Server& srv);
-		std::string								respond(class Server& srv);
+		std::string					returnFile(class Server& srv);
+		std::string					createHeader(class Server& srv);
+		std::string					createResponse(class Server& srv);
+		std::string					respond(class Server& srv);
 		
 		/*check*/
-		bool											checkMethod(Location& location);
-		std::string								checkStatus(class Server& srv);
-		std::string								checkType(class Server& srv);
+		std::vector<class Location>::iterator checkPath(class Server &srv);
+		bool						checkMethod(Location& location);
+		std::string					checkStatus(class Server& srv);
+		std::string					checkType(class Server& srv);
+		std::string					checkContent(class Server &srv);
 
 		/*debug*/
-		void											debug( void );
+		void						debug( void );
 
     private :
 		std::vector<std::string>	_buffer;
 		std::string					_type;
 		std::string					_path;
 		std::vector<std::string>	_accept;
-		
+		std::string					_httpver;
+		std::string					_content;
 };
 
 #endif

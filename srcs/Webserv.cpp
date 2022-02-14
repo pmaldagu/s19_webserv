@@ -196,7 +196,7 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa((*it).getSockaddr().sin_addr) << std::endl;
 }
 
-void Webserv::receiveRequest(std::list<class Client>::iterator it)
+bool Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	char buffer[30001]; // change 3000 par max body size ?;
 
@@ -206,8 +206,14 @@ void Webserv::receiveRequest(std::list<class Client>::iterator it)
 		throw std::runtime_error("recv() failed");
 	
 	/*link request to client*/
-	(*it).setRequest(Request(buffer));
-
+	if (buffer[0] != 0)
+		(*it).setRequest(Request(buffer));
+	else
+	{
+		close((*it).getFd());
+		_clients.erase(it);
+		return (false);
+	}
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
 	std::cout << YELLOW << "=> READ" << RESET << std::endl;
@@ -215,9 +221,10 @@ void Webserv::receiveRequest(std::list<class Client>::iterator it)
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
 	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer;
+	return (true);
 }
 
-void Webserv::sendResponse(std::list<class Client>::iterator it)
+std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>::iterator it)
 {
 	/*debug*/
 	//std::string buffer = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
@@ -237,8 +244,7 @@ void Webserv::sendResponse(std::list<class Client>::iterator it)
 
 	/*close client*/
 	close((*it).getFd());
-	_clients.erase(it);
-	
+	return (_clients.erase(it));
 }
 
 void Webserv::launch( void )
@@ -264,12 +270,15 @@ void Webserv::launch( void )
 			{
 				/*set as read*/
 				if (FD_ISSET((*clt).getFd(), &readfds))
-					receiveRequest(clt);
+				{
+					if (!receiveRequest(clt))
+						break ;
+				}
 				/*set as write*/
 				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
 				{
-					sendResponse(clt);
-					break; //TODO A ENLEVER ET RECUP IT DE SENDRESPONSE
+					clt = sendResponse(clt);
+					//break; //TODO A ENLEVER ET RECUP IT DE SENDRESPONSE
 				}
 			}
 
@@ -282,7 +291,7 @@ void Webserv::launch( void )
 					acceptConnection(srv, "READ");
 			}
 			//std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
-			usleep(200);
+			//usleep(200);
 		}
 		else
 		{

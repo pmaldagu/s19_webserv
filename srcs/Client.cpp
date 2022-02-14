@@ -17,7 +17,7 @@ Client::Client(Client const& copy)
 
 Client::~Client()
 {
-	if (this->_req != 0)
+	if (_ready)
 		delete this->_req;
 }
 
