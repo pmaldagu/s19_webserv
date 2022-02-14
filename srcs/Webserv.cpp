@@ -6,7 +6,7 @@
 /*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/04 16:41:32 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/11 15:46:04 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,7 @@ void Webserv::receiveRequest(std::list<class Client>::iterator it)
 
 	/*receive*/
 	memset(buffer, 0, 30001);
-	if((recv((*it).getFd(), buffer, 30000, 0)) <= 0)
+	if((recv((*it).getFd(), buffer, 30000, 0)) < 0)
 		throw std::runtime_error("recv() failed");
 	
 	/*link request to client*/

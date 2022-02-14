@@ -17,7 +17,8 @@ Client::Client(Client const& copy)
 
 Client::~Client()
 {
-	delete this->_req;
+	if (this->_req != 0)
+		delete this->_req;
 }
 
 Client& Client::operator=(Client const& copy)

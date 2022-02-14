@@ -28,18 +28,22 @@ class Request
 
 		/*getter*/
 		std::vector<std::string>	getBuffer( void ) const;
-		std::string					getType( void ) const;
-		std::string					getPath( void ) const;
+		std::string								getType( void ) const;
+		std::string								getPath( void ) const;
 		std::vector<std::string>	getAccept( void ) const;
 
 		/*respond*/
-		std::string					respond(class Server& srv);
+		std::string								returnFile(class Server& srv
+		std::string								createHeader(class Server& srv);
+		std::string								respond(class Server& srv);
 		
-		/*check method*/
-		bool						checkMethod(Location& location);
+		/*check*/
+		bool											checkMethod(Location& location);
+		std::string								checkStatus(class Server& srv);
+		std::string								checkType(class Server& srv);
 
 		/*debug*/
-		void						debug( void );
+		void											debug( void );
 
     private :
 		std::vector<std::string>	_buffer;
