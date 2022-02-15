@@ -54,8 +54,9 @@ Request& Request::operator=(Request const& copy)
 		this->_type = copy._type;
     	this->_path = copy._path;
     	this->_accept = copy._accept;
-		this->_content = copy._content;
+		this->_filename = copy._filename;
 		this->_httpver = copy._httpver;
+		this->_location = copy._location;
     }
     return (*this);
 }
@@ -96,13 +97,13 @@ void Request::parsePath( void )
 	size_t ret = 0;
 
 	ret = _buffer[0].find(" ");
-	this->_path = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
+	this->_location = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
 	//if ((ret = this->_path.rfind("/")) != this->_path.size() - 1)
-	if ((ret = this->_path.rfind(".")) != std::string::npos)
+	if ((ret = this->_location.rfind(".")) != std::string::npos)
 	{
-		ret = this->_path.rfind("/");
-		this->_content = this->_path.substr(ret + 1, this->_path.size() - 1);
-		this->_path = this->_path.substr(0, ret + 1);
+		ret = this->_location.rfind("/");
+		this->_filename = this->_location.substr(ret + 1, this->_path.size() - 1);
+		this->_location = this->_location.substr(0, ret + 1);
 	}
 }
 
@@ -171,21 +172,32 @@ std::string Request::getHttpver( void ) const
 	return (this->_httpver);
 }
 
-std::string Request::getContent( void ) const
+std::string Request::getLocation( void ) const
 {
-	return (this->_content);
+	return (this->_location);
+}
+
+std::string Request::getFilename( void ) const
+{
+	return (this->_filename);
 }
 
 /*check*/
 
 std::string Request::checkContent(class Server &srv)
 {
-	int ret = open((srv.getRoot() + this->_content).c_str(), O_RDONLY);
+	char* buffer[10];
+	int ret = 0;
+	int fd = open((srv.getRoot() + this->_path + this->_filename).c_str(), O_RDONLY);
 
-	if (ret < 0)
-		return ("");
+	if (fd < 0)
+		return ("HTTP/1.1 404 Not found");
+	memset(buffer, 0, 10);
+	ret = read(fd, buffer, 9);
+	if (buffer[0] == 0)
+		return ("HTTP/1.1 204 No Content\n");
 	else
-		return ("OK"); //// renvoyer read()
+		return ("OK");
 }
 
 std::vector<class Location>::iterator Request::checkPath(class Server &srv)
@@ -225,57 +237,42 @@ std::string  Request::checkStatus(class Server &srv)
 	std::string ret;
 	std::vector<class Location>::iterator it = checkPath(srv);
 
-	//find location
+	/*find location*/
+	for ( ; it != srv.getLocation().end(); it++)
+	{
+		if ((*it).getPath() == this->_path)
+			break ;
+	}
+
 	if (this->_httpver != "HTTP/1.1")
 		return ("HTTP/1.1 505 HTTP Version not supported\n");
 	else if (this->_type != "GET" && this->_type != "POST" && this->_type != "DELETE")
 		return ("HTTP/1.1 501 Not Implemented\n");
 	else if ((it == srv.getLocation().end()))
-		return ("HTTP/1.1 404 Not Found\n");
+	 	return ("HTTP/1.1 404 Not Found\n");
+	else if ((ret = checkContent(srv)) != "OK")
+		return (ret);
 	else if (!checkMethod(*it))
 		return ("HTTP/1.1 405 Method Not Allowed\n");
 	//else if ()
 	//	return ("HTTP/1.1 301 Moved Permanently\n");
-	else if (!this->_content.empty() && checkContent(srv).size() == 0)
-		return ("HTTP/1.1 204 No Content\n"); /// fichier zero byte;
 	else
 		return ("HTTP/1.1 200 OK\n");
 	return (ret);
 }
 
 /*respond*/
-std::string Request::createResponse(class Server& srv)
-{
-	std::string status;
-	std::string content_type;
-	std::string content_length;
-	std::string content;
-
-	status = checkStatus(srv);
-	return (status + content_type + content_length + content);
-}
-	
 std::string Request::respond(class Server& srv)
 {
-	//std::vector<class Location>::iterator it = srv.getLocation().begin();
+	std::string response = checkStatus(srv);
+	std::string content;
 
-	/*debug*/
-	// std::string badMethod = "HTTP/1.1 300\nContent-type: text/plain\nContent-Length: 11\n\nBad Method.";
-	// std::string greets = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
-	// std::string notfound = "HTTP/1.1 404\nContent-type: text/plain\nContent-Length: 13\n\n404 Not Found";
-	
-	// for ( ; it != srv.getLocation().end(); it++)
-	// {
-	// 	if ((*it).getPath() == this->_path)
-	// 	{
-	// 		if (!checkMethod(*it))
-	// 			return (badMethod);
-	// 		return (greets);
-	// 	}
-	// }
-	//return (notfound);
-
-	return (checkStatus(srv) + "Content-type: text/plain\nContent-Length: 12\n\nHello world!");
+	if (response.find("200") != std::string::npos)
+	{
+		//content = getContent();
+		//response += checkContentType() + "Content-length: " + to_string(content.size()) + content;
+	}
+	return (response);
 }
 
 /*debug*/
@@ -286,7 +283,7 @@ void Request::debug( void )
 	std::cout << RED << "TYPE : " << RESET << this->getType() << std::endl;
 	std::cout << RED << "PATH : " << RESET << this->getPath() << std::endl;
 	std::cout << RED << "HTTP : " << RESET <<this->getHttpver() << std::endl;
-	std::cout << RED << "Content : " << RESET << this->getContent() << std::endl;
+	std::cout << RED << "File name : " << RESET << this->getFilename() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;
 	while ( i < _accept.size())
 	{

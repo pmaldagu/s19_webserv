@@ -33,12 +33,12 @@ class Request
 		std::string					getPath( void ) const;
 		std::vector<std::string>	getAccept( void ) const;
 		std::string					getHttpver( void ) const;
-		std::string					getContent( void ) const;
+		std::string					getLocation( void ) const;
+		std::string					getFilename( void ) const;
 
 		/*respond*/
 		std::string					returnFile(class Server& srv);
 		std::string					createHeader(class Server& srv);
-		std::string					createResponse(class Server& srv);
 		std::string					respond(class Server& srv);
 		
 		/*check*/
@@ -57,7 +57,8 @@ class Request
 		std::string					_path;
 		std::vector<std::string>	_accept;
 		std::string					_httpver;
-		std::string					_content;
+		std::string					_filename;
+		std::string					_location;
 };
 
 #endif

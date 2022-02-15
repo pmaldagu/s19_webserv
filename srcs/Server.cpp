@@ -31,13 +31,16 @@ Server& Server::operator=(Server const& copy)
         this->_client_max_body_size = copy._client_max_body_size;
         this->_server_name = copy._server_name;
         this->_redirection = copy._redirection;
+        //this->_cgi.clear();
+        //for (int a = 0; a < copy._cgi.size(); a++)
+        //    this->_cgi.push_back(copy._cgi[a]);
         this->_location_vector.clear();
         for (int a = 0; a < copy._location_vector.size(); a++)
             this->_location_vector.push_back(copy._location_vector[a]);
-		memset(&_address, 0, sizeof(_address));
-		this->_address.sin_addr.s_addr = copy._address.sin_addr.s_addr;
-		this->_address.sin_port = copy._address.sin_port;
-		this->_address.sin_family = copy._address.sin_family;
+        memset(&_address, 0, sizeof(_address));
+        this->_address.sin_addr.s_addr = copy._address.sin_addr.s_addr;
+        this->_address.sin_port = copy._address.sin_port;
+        this->_address.sin_family = copy._address.sin_family;
     }
     return (*this);
 }
@@ -101,6 +104,46 @@ void Server::setRedirection(std::string redirection)
     redirection.erase(0, 6);
     this->_redirection = redirection;
 }
+
+/////////////////////////////////////////////////////////////////////
+///////////////////////////// NATHAN ////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+/*
+std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2)
+{
+    std::vector<std::string>::iterator it = iterator;
+    std::vector<std::string>::iterator it_end = iterator2;
+
+    CGI *newCGI = new CGI;
+    while ((*it).find("}") == std::string::npos)
+    {
+        if ((*it).find("*") != std::string::npos)
+            newCGI->setType(*it);
+        else if ((*it).find("root") != std::string::npos)
+            newCGI->setPath(*it);
+        else if ((*it).find("http_methods") != std::string::npos)
+        {
+            if ((*it).find("GET") != std::string::npos)
+                newCGI->setGetMethod(true);
+            if ((*it).find("POST") != std::string::npos)
+                newCGI->setPostMethod(true);
+            if ((*it).find("DELETE") != std::string::npos)
+                newCGI->setDeleteMethod(true);
+        }
+        it++;
+    }
+    if (newCGI->getGetMethod() == 0 && newCGI->getPostMethod() == 0 && newCGI->getDeleteMethod() == 0)
+    {
+       newCGI->setGetMethod(true);
+       newCGI->setPostMethod(true);
+       newCGI->setDeleteMethod(true);
+    }
+    this->_cgi.push_back(*newCGI);
+    delete newCGI;
+    return (it);
+}
+*/
 
 void Server::setSockaddr()
 {
@@ -199,6 +242,13 @@ std::string Server::getRedirection() const
 {
     return (this->_redirection);
 }
+
+/*
+std::list<class CGI>& Server::getCGI();
+{
+    return (this->_cgi);
+}
+*/
 
 struct sockaddr_in& Server::getSockaddr()
 {

@@ -9,7 +9,7 @@ Config::Config(std::string path) : _serv_vector()
     size_t                              a = 0;
 
     if (!ifs.is_open())
-        throw std::exception();
+        throw std::runtime_error("is_open() failed");
     while (getline(ifs, line))
         this->_data.push_back(line);
 
@@ -63,7 +63,12 @@ void Config::setServ()
             while ((*it).find("}") == std::string::npos)
             {
                 if ((*it).find("location") != std::string::npos)
-                    it = newServ->setLocation(it, it_end);
+                {
+                    //if ((*it).find("*") != std::string::npos)
+                    //    it = newServ->setCGI(it, it_end);
+                    //else
+                        it = newServ->setLocation(it, it_end);
+                }
                 else if ((*it).find("root") != std::string::npos)
                     newServ->setRoot(*it);
                 else if ((*it).find("listen") != std::string::npos)

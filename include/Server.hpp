@@ -21,6 +21,7 @@ class Server
         void                                setCmaxsize(std::string myclientbodysize);
         void                                setServername(std::string servername);
         void                                setRedirection(std::string redirection);
+        //std::vector<std::string>::iterator  setCGI(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2);
         std::vector<std::string>::iterator  setLocation(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2);
         void                                setSockaddr();
 
@@ -33,6 +34,7 @@ class Server
         std::string                         getCmaxsize() const;
         std::string                         getServername() const;
         std::string                         getRedirection() const;
+        //std::list<class CGI>&               getCGI();
         std::vector<class Location>&        getLocation();
         struct sockaddr_in&                 getSockaddr();
 
@@ -49,6 +51,7 @@ class Server
         std::string                         _server_name;
         std::string                         _redirection;
         std::vector<class Location>         _location_vector;
+        //std::list<class CGI> _cgi; // la 2ème partie de la pair doit etre une class CGI((parser https_method))      //premier string = type de fichier, deuxieme string = path
         struct sockaddr_in                  _address;
 };
 
