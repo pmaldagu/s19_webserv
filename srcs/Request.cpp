@@ -97,8 +97,10 @@ void Request::parsePath( void )
 
 	ret = _buffer[0].find(" ");
 	this->_path = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
-	if ((ret = this->_path.rfind("/")) != this->_path.size() - 1)
+	//if ((ret = this->_path.rfind("/")) != this->_path.size() - 1)
+	if ((ret = this->_path.rfind(".")) != std::string::npos)
 	{
+		ret = this->_path.rfind("/");
 		this->_content = this->_path.substr(ret + 1, this->_path.size() - 1);
 		this->_path = this->_path.substr(0, ret + 1);
 	}
@@ -235,7 +237,7 @@ std::string  Request::checkStatus(class Server &srv)
 	//else if ()
 	//	return ("HTTP/1.1 301 Moved Permanently\n");
 	else if (!this->_content.empty() && checkContent(srv).size() == 0)
-		return ("HTTP/1.1 204 No Content\n");
+		return ("HTTP/1.1 204 No Content\n"); /// fichier zero byte;
 	else
 		return ("HTTP/1.1 200 OK\n");
 	return (ret);
