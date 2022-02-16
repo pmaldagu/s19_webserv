@@ -24,6 +24,9 @@
 # include "Location.hpp"
 # include "Client.hpp"
 # include "Request.hpp"
+# include "CGI.hpp"
+
+# define BUFFERSIZE 4096
 
 #define RESET   "\033[0m"
 #define RED     "\033[31m"

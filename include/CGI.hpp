@@ -6,12 +6,12 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 15:55:02 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/16 15:53:16 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/16 15:58:13 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CGI_CLASS_HPP
-# define CGI_CLASS_HPP
+#ifndef CGI_HPP
+# define CGI_HPP
 
 # include "lib.hpp"
 
