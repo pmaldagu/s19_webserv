@@ -20,6 +20,7 @@ class Request
 		void						parseType( void );
 		void						parsePath( void );
 		void						parseAccept( void );
+		void						parseFilename(class Server& srv);
 
 		/*setter
 		void						setType(std::string type);

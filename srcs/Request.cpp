@@ -34,7 +34,7 @@ Request::Request(char* buffer)
 	parsePath();
 	parseHttpVersion();
 	parseAccept();
-	debug();
+	//debug();
 }
 
 Request::Request(Request const& copy)
@@ -99,12 +99,12 @@ void Request::parsePath( void )
 	ret = _buffer[0].find(" ");
 	this->_location = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
 	//if ((ret = this->_path.rfind("/")) != this->_path.size() - 1)
-	if ((ret = this->_location.rfind(".")) != std::string::npos)
-	{
-		ret = this->_location.rfind("/");
-		this->_filename = this->_location.substr(ret + 1, this->_path.size() - 1);
-		this->_location = this->_location.substr(0, ret + 1);
-	}
+	// if ((ret = this->_location.rfind(".")) != std::string::npos)
+	// {
+	// 	ret = this->_location.rfind("/");
+	// 	this->_filename = this->_location.substr(ret + 1, this->_path.size() - 1);
+	// 	this->_location = this->_location.substr(0, ret + 1);
+	// }
 }
 
 void Request::parseAccept( void )
@@ -127,6 +127,38 @@ void Request::parseAccept( void )
 		this->_accept.push_back(_buffer[line].substr(index, ret - index));
 		index = ret + 1;
 	}
+}
+
+void Request::parseFilename(class Server& srv)
+{
+	std::vector<class Location>::iterator	it = srv.getLocation().begin();
+	int										ret = 0;
+
+	for (; it != srv.getLocation().end(); it++)
+	{
+		if (this->_location.find((*it).getPath()) != std::string::npos && (*it).getPath().size() != 1)
+		{
+			// std::cout << YELLOW << "XDLOL\n";
+			// std::cout << YELLOW << "location size : " << this->_location.size() << RESET << std::endl;
+			this->_path = this->_location.substr((*it).getPath().size(), this->_location.size() - 1);
+			this->_location = (*it).getPath();
+			if ((ret = this->_path.rfind(".")) != std::string::npos)
+			{
+				ret = this->_path.rfind("/");
+				this->_filename = this->_path.substr(ret, this->_path.size() - ret - 1);
+				this->_path = this->_location.substr(0, ret);
+			}
+			// else if (!(*it).getIndex().empty())
+			// 	this->_filename = "/" + (*it).getIndex();
+			//else
+			// {
+			// 	this->_filename = srv.getDefaultPage();
+			// }
+			break ;
+		}
+	}
+	if (this->_filename.empty())
+		this->_filename = "index.html"; ////// à changer
 }
 
 /*setter
@@ -188,8 +220,9 @@ std::string Request::checkContent(class Server &srv)
 {
 	char* buffer[10];
 	int ret = 0;
-	int fd = open((srv.getRoot() + this->_path + this->_filename).c_str(), O_RDONLY);
+	int fd = open(("." + srv.getRoot() + this->_location + this->_path + this->_filename).c_str(), O_RDONLY);
 
+	std::cout << YELLOW << "fd : " << fd << RESET << std::endl;
 	if (fd < 0)
 		return ("HTTP/1.1 404 Not found");
 	memset(buffer, 0, 10);
@@ -206,7 +239,7 @@ std::vector<class Location>::iterator Request::checkPath(class Server &srv)
 
 	for ( ; it != srv.getLocation().end(); it++)
 	{
-		if ((*it).getPath() == this->_path)
+		if ((*it).getPath() == this->_location)
 			return (it);
 	}
 	return (srv.getLocation().end());	
@@ -237,13 +270,6 @@ std::string  Request::checkStatus(class Server &srv)
 	std::string ret;
 	std::vector<class Location>::iterator it = checkPath(srv);
 
-	/*find location*/
-	for ( ; it != srv.getLocation().end(); it++)
-	{
-		if ((*it).getPath() == this->_path)
-			break ;
-	}
-
 	if (this->_httpver != "HTTP/1.1")
 		return ("HTTP/1.1 505 HTTP Version not supported\n");
 	else if (this->_type != "GET" && this->_type != "POST" && this->_type != "DELETE")
@@ -251,7 +277,7 @@ std::string  Request::checkStatus(class Server &srv)
 	else if ((it == srv.getLocation().end()))
 	 	return ("HTTP/1.1 404 Not Found\n");
 	else if ((ret = checkContent(srv)) != "OK")
-		return (ret);
+	 	return (ret);
 	else if (!checkMethod(*it))
 		return ("HTTP/1.1 405 Method Not Allowed\n");
 	//else if ()
@@ -264,6 +290,7 @@ std::string  Request::checkStatus(class Server &srv)
 /*respond*/
 std::string Request::respond(class Server& srv)
 {
+	parseFilename(srv);
 	std::string response = checkStatus(srv);
 	std::string content;
 
@@ -272,6 +299,7 @@ std::string Request::respond(class Server& srv)
 		//content = getContent();
 		//response += checkContentType() + "Content-length: " + to_string(content.size()) + content;
 	}
+	debug();
 	return (response);
 }
 
@@ -283,7 +311,8 @@ void Request::debug( void )
 	std::cout << RED << "TYPE : " << RESET << this->getType() << std::endl;
 	std::cout << RED << "PATH : " << RESET << this->getPath() << std::endl;
 	std::cout << RED << "HTTP : " << RESET <<this->getHttpver() << std::endl;
-	std::cout << RED << "File name : " << RESET << this->getFilename() << std::endl;
+	std::cout << RED << "FILE NAME : " << RESET << this->getFilename() << std::endl;
+	std::cout << RED << "LOCATION : " << RESET << this->getLocation() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;
 	while ( i < _accept.size())
 	{
