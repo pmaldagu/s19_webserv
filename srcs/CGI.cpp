@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 16:43:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/16 15:55:11 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/16 16:01:36 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ void		CGI::setEnv(char **env) {
 }
 
 std::string	CGI::getBodyVar() const {
-	return (_BODY);
+	return (_BODY); //?
 }
 
 /* ********************************* Others ********************************* */
