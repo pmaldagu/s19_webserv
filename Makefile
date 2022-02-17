@@ -15,7 +15,7 @@ NAME		= webserver_exec
 
 CXX 		= clang++
 RM 			= rm -f
-CXXFLAGS 	= -Wall -Wextra -Werror -std=c++98
+CXXFLAGS 	= -Wall -Wextra -Werror #-std=c++98
 
 CGREEN		= \033[38;2;0;153;0m
 CRED		= \033[0;31m

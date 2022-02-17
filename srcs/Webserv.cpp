@@ -19,7 +19,7 @@ Webserv::Webserv() : on(1)
 
 Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 {
-	for (int i = 0; i < servers.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 		_servers.push_back(servers[i]);
 	
 	try
@@ -251,7 +251,6 @@ void Webserv::launch( void )
 {
 	int ret = -1;
 	int max_sd;
-	int new_socket;
 
 	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)

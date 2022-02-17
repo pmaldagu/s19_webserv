@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 
         file->setServ();
         //////////////// Print my data /////////////////
-        for (int a = 0; a < file->getServ().size(); a++)
+        for (size_t a = 0; a < file->getServ().size(); a++)
             file->getServ()[a].debug();
         ////////////////////////////////////////////////
 

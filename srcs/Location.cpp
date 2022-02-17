@@ -48,7 +48,7 @@ void Location::setPath(std::string path)
 {
     path.erase(std::remove_if(path.begin(), path.end(), isspace), path.end());
     path.erase(0, 8);
-    path.pop_back();
+    path.erase(path.size() - 1);
     this->_path = path;
 }
 

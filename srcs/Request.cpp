@@ -56,7 +56,8 @@ Request& Request::operator=(Request const& copy)
     	this->_accept = copy._accept;
 		this->_filename = copy._filename;
 		this->_httpver = copy._httpver;
-		this->_location = copy._location;
+		this->_root = copy._root;
+		this->_status = copy._status;
     }
     return (*this);
 }
@@ -97,13 +98,13 @@ void Request::parsePath( void )
 	size_t ret = 0;
 
 	ret = _buffer[0].find(" ");
-	this->_location = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
+	this->_path = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
 	//if ((ret = this->_path.rfind("/")) != this->_path.size() - 1)
-	// if ((ret = this->_location.rfind(".")) != std::string::npos)
+	// if ((ret = this->_root.rfind(".")) != std::string::npos)
 	// {
-	// 	ret = this->_location.rfind("/");
-	// 	this->_filename = this->_location.substr(ret + 1, this->_path.size() - 1);
-	// 	this->_location = this->_location.substr(0, ret + 1);
+	// 	ret = this->_root.rfind("/");
+	// 	this->_filename = this->_root.substr(ret + 1, this->_path.size() - 1);
+	// 	this->_root = this->_root.substr(0, ret + 1);
 	// }
 }
 
@@ -132,21 +133,23 @@ void Request::parseAccept( void )
 void Request::parseFilename(class Server& srv)
 {
 	std::vector<class Location>::iterator	it = srv.getLocation().begin();
-	int										ret = 0;
+	size_t									ret = 0;
 
 	for (; it != srv.getLocation().end(); it++)
 	{
-		if (this->_location.find((*it).getPath()) != std::string::npos && (*it).getPath().size() != 1)
+		if (this->_path.find((*it).getPath()) != std::string::npos && (*it).getPath().size() != 1)
 		{
 			// std::cout << YELLOW << "XDLOL\n";
-			// std::cout << YELLOW << "location size : " << this->_location.size() << RESET << std::endl;
-			this->_path = this->_location.substr((*it).getPath().size(), this->_location.size() - 1);
-			this->_location = (*it).getPath();
+			// std::cout << YELLOW << "location size : " << this->_root.size() << RESET << std::endl;
+			this->_path = this->_path.substr((*it).getPath().size(), this->_path.size() - 1);
+			this->_root = (*it).getRoot();
+			if ((*it).getRoot().empty())
+				this->_root = srv.getRoot();
 			if ((ret = this->_path.rfind(".")) != std::string::npos)
 			{
 				ret = this->_path.rfind("/");
 				this->_filename = this->_path.substr(ret, this->_path.size() - ret - 1);
-				this->_path = this->_location.substr(0, ret);
+				this->_path = this->_root.substr(0, ret);
 			}
 			// else if (!(*it).getIndex().empty())
 			// 	this->_filename = "/" + (*it).getIndex();
@@ -157,8 +160,25 @@ void Request::parseFilename(class Server& srv)
 			break ;
 		}
 	}
+	if (it == srv.getLocation().end())
+	{
+		if (this->_path.size() > 1)
+			this->_path = this->_path.substr(1, this->_path.size() - 1);
+		this->_root = srv.getRoot();
+		if ((ret = this->_path.rfind(".")) != std::string::npos)
+		{
+			ret = this->_path.rfind("/");
+			this->_filename = this->_path.substr(ret, this->_path.size() - ret - 1);
+			this->_path = this->_root.substr(0, ret);
+		}
+	}
 	if (this->_filename.empty())
-		this->_filename = "index.html"; ////// à changer
+	{
+		if (it != srv.getLocation().end() && !(*it).getIndex().empty())
+			this->_filename = (*it).getIndex();
+		if (this->_filename.empty())
+			this->_filename = srv.getIndex();
+	}
 }
 
 /*setter
@@ -204,9 +224,9 @@ std::string Request::getHttpver( void ) const
 	return (this->_httpver);
 }
 
-std::string Request::getLocation( void ) const
+std::string Request::getRoot( void ) const
 {
-	return (this->_location);
+	return (this->_root);
 }
 
 std::string Request::getFilename( void ) const
@@ -214,23 +234,35 @@ std::string Request::getFilename( void ) const
 	return (this->_filename);
 }
 
-/*check*/
+std::string Request::getStatus( void ) const
+{
+	return (this->_status);
+}
 
+/*check*/
 std::string Request::checkContent(class Server &srv)
 {
-	char* buffer[10];
-	int ret = 0;
-	int fd = open(("." + srv.getRoot() + this->_location + this->_path + this->_filename).c_str(), O_RDONLY);
+	// char* buffer[10];
+	// int ret = 0;
+	// int fd = open(("." + srv.getRoot() + this->_root + this->_path + this->_filename).c_str(), O_RDONLY);
+	(void)srv;
+	std::ifstream t("." + srv.getRoot() + this->_path + this->_filename); //faux
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+	std::string body = buffer.str();
 
-	std::cout << YELLOW << "fd : " << fd << RESET << std::endl;
-	if (fd < 0)
-		return ("HTTP/1.1 404 Not found");
-	memset(buffer, 0, 10);
-	ret = read(fd, buffer, 9);
-	if (buffer[0] == 0)
-		return ("HTTP/1.1 204 No Content\n");
-	else
-		return ("OK");
+	if (!t.is_open())
+	{
+		this->_status = "HTTP/1.1 404 Not found\n";
+		return ("");
+	}
+	if (buffer.str().empty())
+	{
+		this->_status = "HTTP/1.1 204 No Content\n";
+		return ("");
+	}
+	t.close();
+	return (body);
 }
 
 std::vector<class Location>::iterator Request::checkPath(class Server &srv)
@@ -239,7 +271,7 @@ std::vector<class Location>::iterator Request::checkPath(class Server &srv)
 
 	for ( ; it != srv.getLocation().end(); it++)
 	{
-		if ((*it).getPath() == this->_location)
+		if ((*it).getPath() == this->_root)
 			return (it);
 	}
 	return (srv.getLocation().end());	
@@ -287,6 +319,22 @@ std::string  Request::checkStatus(class Server &srv)
 	return (ret);
 }
 
+std::string Request::checkContentType()
+{
+	size_t		ret = this->_filename.find(".");
+	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
+	std::cout << YELLOW << "ext : " << ext << RESET << std::endl;
+
+	std::vector<std::string>::iterator it = this->_accept.begin();
+
+	for (; it != this->_accept.end(); it++)
+	{
+		if ((*it).find(ext))
+			return ("Content-Type: " + (*it) + "\n");
+	}
+	return (""); /////// type de contenu pas accepté /// faut changer quoi
+}
+
 /*respond*/
 std::string Request::respond(class Server& srv)
 {
@@ -294,11 +342,14 @@ std::string Request::respond(class Server& srv)
 	std::string response = checkStatus(srv);
 	std::string content;
 
-	if (response.find("200") != std::string::npos)
-	{
-		//content = getContent();
-		//response += checkContentType() + "Content-length: " + to_string(content.size()) + content;
-	}
+	// if (response.find("200") != std::string::npos)
+	// {
+		content = checkContent(srv);
+		response += checkContentType() + "Content-length: " + std::to_string(content.size()) + "\n" + content;
+		std::cout << YELLOW << "response : " << response << RESET << std::endl;
+		std::cout << YELLOW << "status : " << this->_status << RESET << std::endl;
+
+	// }
 	debug();
 	return (response);
 }
@@ -312,7 +363,7 @@ void Request::debug( void )
 	std::cout << RED << "PATH : " << RESET << this->getPath() << std::endl;
 	std::cout << RED << "HTTP : " << RESET <<this->getHttpver() << std::endl;
 	std::cout << RED << "FILE NAME : " << RESET << this->getFilename() << std::endl;
-	std::cout << RED << "LOCATION : " << RESET << this->getLocation() << std::endl;
+	std::cout << RED << "ROOT : " << RESET << this->getRoot() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;
 	while ( i < _accept.size())
 	{

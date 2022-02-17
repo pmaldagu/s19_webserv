@@ -5,7 +5,7 @@ Client::Client()
 	throw std::runtime_error("invalid Client constructor");
 }
 
-Client::Client(int fd, int listen) : _fd(fd), _listen(listen), _ready(false)
+Client::Client(int fd, int listen) : _ready(false), _listen(listen), _fd(fd)
 {
 	this->_req = 0;
 }

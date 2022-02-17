@@ -36,7 +36,8 @@
 	- HTTP_REFERER: absolute/part address of webpage from which the request has
 					been sent. */
 
-class	CGI {
+class	CGI
+{
 	public:
 		/* ********************* Constructors/Destructor ******************** */
 		CGI();
@@ -54,6 +55,14 @@ class	CGI {
 		/* ***************************** Others ***************************** */
 		char *	strcat(std::string s1, std::string s2);
 		int		execute();
+
+		/* ***************************** Setters ***************************** */
+
+		void setRoot(std::string root);
+
+		/* ***************************** Getters ***************************** */
+
+		std::string getRoot() const;
 
 	private:
 		/*	Server variables */

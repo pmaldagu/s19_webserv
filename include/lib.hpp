@@ -9,6 +9,7 @@
 # include <cstring>
 # include <vector>
 # include <fstream>
+# include <sstream>
 # include <algorithm>
 # include <exception>
 # include <netinet/in.h>

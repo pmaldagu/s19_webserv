@@ -34,8 +34,9 @@ class Request
 		std::string					getPath( void ) const;
 		std::vector<std::string>	getAccept( void ) const;
 		std::string					getHttpver( void ) const;
-		std::string					getLocation( void ) const;
+		std::string					getRoot( void ) const;
 		std::string					getFilename( void ) const;
+		std::string					getStatus( void ) const;
 
 		/*respond*/
 		std::string					returnFile(class Server& srv);
@@ -43,11 +44,13 @@ class Request
 		std::string					respond(class Server& srv);
 		
 		/*check*/
+		std::string					checkBody(int fd);
 		std::vector<class Location>::iterator checkPath(class Server &srv);
 		bool						checkMethod(Location& location);
 		std::string					checkStatus(class Server& srv);
 		std::string					checkType(class Server& srv);
 		std::string					checkContent(class Server &srv);
+		std::string					checkContentType();
 
 		/*debug*/
 		void						debug( void );
@@ -59,7 +62,8 @@ class Request
 		std::vector<std::string>	_accept;
 		std::string					_httpver;
 		std::string					_filename;
-		std::string					_location;
+		std::string					_root;
+		std::string					_status;
 };
 
 #endif

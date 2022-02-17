@@ -85,7 +85,8 @@ CGI &	CGI::operator=(const CGI & rhs) {
 /* ******************************** Accessors ******************************* */
 
 /*	Called everytime a new request is made */
-void		CGI::setVariables(Request & request, Server & server) {
+void CGI::setVariables(Request & request, Server & server)
+{
 	char	currentDir[256];
 	std::string	queryMark = request.getPath();
 
@@ -98,20 +99,23 @@ void		CGI::setVariables(Request & request, Server & server) {
 	_SERVER_PORT = server.getPort();
 	_SERVER_SOFTWARE = server.getServername();
 	_GATEWAY_INTERFACE = "CGI/1.1";
-	// _SCRIPT_NAME = server.getCGIPath();
+	// _SCRIPT_NAME = server.getCGIPath(); /// root
 	_PATH_TRANSLATED = (char*)__path.c_str();
-	if (queryMark.find('?') != std::string::npos) {
+	if (queryMark.find('?') != std::string::npos)
+	{
 		_QUERY_STRING = queryMark.substr(queryMark.find('?') + 1);
 		_PATH_INFO = queryMark.substr(0, queryMark.find('?'));
 		_PATH_TRANSLATED += _PATH_INFO;
 	}
-	_SERVER_NAME = "http://localhost";
+	_SERVER_NAME = server.getSockaddr().sin_addr.s_addr;
 	/*	The request has succeeded. The info returned depends on the method
 		(GET, POST) used in the request. */
 	_REDIRECT_STATUS = "200";
 }
 
-void		CGI::setEnv(char **env) {
+void CGI::setEnv(char **env)
+{
+	(void)env;
 	std::string	s1 = "REQUEST_METHOD=";
 
 	_env[0] = (char*)"SERVER_PROTOCOL=HTTP/1.1"; 
@@ -130,13 +134,15 @@ void		CGI::setEnv(char **env) {
 	_env[13] = NULL;
 }
 
-std::string	CGI::getBodyVar() const {
+std::string	CGI::getBodyVar() const
+{
 	return (_BODY); //?
 }
 
 /* ********************************* Others ********************************* */
 /*	Classic strcat() for std::string conversion */
-char*	CGI::strcat(std::string s1, std::string s2) {
+char*	CGI::strcat(std::string s1, std::string s2)
+{
 	return (strdup((char*)(s1 + s2).c_str()));
 }
 
@@ -148,7 +154,8 @@ char*	CGI::strcat(std::string s1, std::string s2) {
 	CGI will give the result to webserver and it will make response based on
 	this result.
 	https://forhjy.medium.com/42-webserv-cgi-programming-66d63c3b22db */
-int		CGI::execute(void) {
+int CGI::execute(void)
+{
 	int			fd[2], fdIn = dup(STDIN_FILENO), fdOut = dup(STDOUT_FILENO), ret = 1;
 	char		buffer[BUFFERSIZE + 1];
 	std::string	body = "";
@@ -164,7 +171,7 @@ int		CGI::execute(void) {
 			arg[2] = NULL
 			env = has parsed request and some more variables according to RFC3875
 				[see: private attr.] */
-		execve(_SCRIPT_NAME.c_str(), NULL, _env);
+		//execve(_SCRIPT_NAME.c_str(), NULL, _env);
 		// exit(0);
 	}
 	close(fd[1]);
@@ -178,4 +185,20 @@ int		CGI::execute(void) {
 	dup2(fdIn, STDIN_FILENO);
 	dup2(fdOut, STDOUT_FILENO);
 	return (ret);
+}
+
+/* ***************************** Setters ***************************** */
+
+void CGI::setRoot(std::string myroot)
+{
+    myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
+    myroot.erase(0, 4);
+    this->_SCRIPT_NAME = myroot;
+}
+
+/* ***************************** Getters ***************************** */
+
+std::string CGI::getRoot() const
+{
+	return (this->_SCRIPT_NAME);
 }

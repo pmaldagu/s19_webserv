@@ -6,7 +6,7 @@
 class Config
 {
     public :
-        Config(std::string path);
+        Config(char* path);
         Config(Config const& copy);
         ~Config();
 

@@ -9,6 +9,7 @@ Server::Server()
     this->_client_max_body_size = "";
     this->_server_name = "";
     this->_redirection = "";
+    this->_index = "";
 
 	memset(&_address, 0, sizeof(_address));
 }
@@ -31,11 +32,12 @@ Server& Server::operator=(Server const& copy)
         this->_client_max_body_size = copy._client_max_body_size;
         this->_server_name = copy._server_name;
         this->_redirection = copy._redirection;
-        //this->_cgi.clear();
-        //for (int a = 0; a < copy._cgi.size(); a++)
-        //    this->_cgi.push_back(copy._cgi[a]);
+        this->_index = copy._index;
+        this->_cgi.clear();
+        for (size_t a = 0; a < copy._cgi.size(); a++)
+            this->_cgi.push_back(copy._cgi[a]);
         this->_location_vector.clear();
-        for (int a = 0; a < copy._location_vector.size(); a++)
+        for (size_t a = 0; a < copy._location_vector.size(); a++)
             this->_location_vector.push_back(copy._location_vector[a]);
         memset(&_address, 0, sizeof(_address));
         this->_address.sin_addr.s_addr = copy._address.sin_addr.s_addr;
@@ -105,45 +107,32 @@ void Server::setRedirection(std::string redirection)
     this->_redirection = redirection;
 }
 
+void Server::setIndex(std::string index)
+{
+    index.erase(std::remove_if(index.begin(), index.end(), isspace), index.end());
+    index.erase(0, 5);
+    this->_index = index;
+}
+
 /////////////////////////////////////////////////////////////////////
 ///////////////////////////// NATHAN ////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
-/*
-std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2)
+std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator)
 {
     std::vector<std::string>::iterator it = iterator;
-    std::vector<std::string>::iterator it_end = iterator2;
 
     CGI *newCGI = new CGI;
     while ((*it).find("}") == std::string::npos)
     {
-        if ((*it).find("*") != std::string::npos)
-            newCGI->setType(*it);
-        else if ((*it).find("root") != std::string::npos)
-            newCGI->setPath(*it);
-        else if ((*it).find("http_methods") != std::string::npos)
-        {
-            if ((*it).find("GET") != std::string::npos)
-                newCGI->setGetMethod(true);
-            if ((*it).find("POST") != std::string::npos)
-                newCGI->setPostMethod(true);
-            if ((*it).find("DELETE") != std::string::npos)
-                newCGI->setDeleteMethod(true);
-        }
+        if ((*it).find("root") != std::string::npos)
+            newCGI->setRoot(*it);
         it++;
-    }
-    if (newCGI->getGetMethod() == 0 && newCGI->getPostMethod() == 0 && newCGI->getDeleteMethod() == 0)
-    {
-       newCGI->setGetMethod(true);
-       newCGI->setPostMethod(true);
-       newCGI->setDeleteMethod(true);
     }
     this->_cgi.push_back(*newCGI);
     delete newCGI;
     return (it);
 }
-*/
 
 void Server::setSockaddr()
 {
@@ -155,10 +144,9 @@ void Server::setSockaddr()
 	this->_address.sin_port = htons(std::stoul(this->_port, nullptr, 0));
 }
 	
-std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>::iterator iterator, std::vector<std::string>::iterator iterator2)
+std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>::iterator iterator)
 {
     std::vector<std::string>::iterator it = iterator;
-    std::vector<std::string>::iterator it_end = iterator2;
 
     Location *newLocation = new Location;
     while ((*it).find("}") == std::string::npos)
@@ -243,12 +231,15 @@ std::string Server::getRedirection() const
     return (this->_redirection);
 }
 
-/*
-std::list<class CGI>& Server::getCGI();
+std::string Server::getIndex() const
+{
+    return (this->_index);
+}
+
+std::vector<class CGI>& Server::getCGI()
 {
     return (this->_cgi);
 }
-*/
 
 struct sockaddr_in& Server::getSockaddr()
 {
@@ -263,13 +254,14 @@ void Server::debug()
     std::cout << GREEN << "   -Port : " << RESET << this->getPort() << std::endl;
     std::cout << GREEN << "   -Host : " << RESET << this->getHost() << std::endl;
     std::cout << GREEN << "   -TimeOut : " << RESET << this->getTimeout() << std::endl;
+    std::cout << GREEN << "   -Index : " << RESET << this->getIndex() << std::endl;
     std::cout << GREEN << "   -Return : " << RESET << this->getRedirection() << std::endl;
     std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
     std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;
 
 
     ///// Print Location //////
-    for (int a = 0; a < this->getLocation().size(); a++)
+    for (size_t a = 0; a < this->getLocation().size(); a++)
     {
         std::cout << YELLOW << "   -> Location " << RESET << &this->getLocation()[a] << std::endl;
         std::cout << YELLOW << "      -Path : " << RESET << this->getLocation()[a].getPath() << std::endl;
