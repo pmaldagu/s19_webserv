@@ -47,7 +47,7 @@ class Request
 		std::string					checkBody(int fd);
 		std::vector<class Location>::iterator checkPath(class Server &srv);
 		bool						checkMethod(Location& location);
-		std::string					checkStatus(class Server& srv);
+		void						checkStatus(class Server& srv);
 		std::string					checkType(class Server& srv);
 		std::string					checkContent(class Server &srv);
 		std::string					checkContentType();

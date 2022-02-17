@@ -148,7 +148,7 @@ void Request::parseFilename(class Server& srv)
 			if ((ret = this->_path.rfind(".")) != std::string::npos)
 			{
 				ret = this->_path.rfind("/");
-				this->_filename = this->_path.substr(ret, this->_path.size() - ret - 1);
+				this->_filename = this->_path.substr(ret + 1, this->_path.size() - ret - 1);
 				this->_path = this->_root.substr(0, ret);
 			}
 			// else if (!(*it).getIndex().empty())
@@ -162,14 +162,15 @@ void Request::parseFilename(class Server& srv)
 	}
 	if (it == srv.getLocation().end())
 	{
-		if (this->_path.size() > 1)
+		//if (this->_path.size() > 1)
+		if ((ret = this->_path.rfind("/")) != 0)
 			this->_path = this->_path.substr(1, this->_path.size() - 1);
 		this->_root = srv.getRoot();
 		if ((ret = this->_path.rfind(".")) != std::string::npos)
 		{
 			ret = this->_path.rfind("/");
-			this->_filename = this->_path.substr(ret, this->_path.size() - ret - 1);
-			this->_path = this->_root.substr(0, ret);
+			this->_filename = this->_path.substr(ret + 1, this->_path.size() - ret - 1);
+			this->_path = this->_path.substr(0, ret + 1);
 		}
 	}
 	if (this->_filename.empty())
@@ -242,14 +243,13 @@ std::string Request::getStatus( void ) const
 /*check*/
 std::string Request::checkContent(class Server &srv)
 {
-	// char* buffer[10];
-	// int ret = 0;
-	// int fd = open(("." + srv.getRoot() + this->_root + this->_path + this->_filename).c_str(), O_RDONLY);
 	(void)srv;
-	std::ifstream t("." + srv.getRoot() + this->_path + this->_filename); //faux
+	std::ifstream t("." + this->_root + this->_path + this->_filename); //faux
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string body = buffer.str();
+
+	//std::cout << "body : " << body << std::endl;
 
 	if (!t.is_open())
 	{
@@ -297,33 +297,30 @@ bool Request::checkMethod(Location& location)
 // 431 => header trop large
 // 503 => service unavaible, si select crash (ou 500 Internal Server error ?)
 
-std::string  Request::checkStatus(class Server &srv)
+void Request::checkStatus(class Server &srv)
 {
-	std::string ret;
 	std::vector<class Location>::iterator it = checkPath(srv);
 
 	if (this->_httpver != "HTTP/1.1")
-		return ("HTTP/1.1 505 HTTP Version not supported\n");
+		this->_status = "HTTP/1.1 505 HTTP Version not supported\n";
 	else if (this->_type != "GET" && this->_type != "POST" && this->_type != "DELETE")
-		return ("HTTP/1.1 501 Not Implemented\n");
+		this->_status = "HTTP/1.1 501 Not Implemented\n";
 	else if ((it == srv.getLocation().end()))
-	 	return ("HTTP/1.1 404 Not Found\n");
-	else if ((ret = checkContent(srv)) != "OK")
-	 	return (ret);
+		this->_status = "HTTP/1.1 404 Not Found\n";
+	// else if ((ret = checkContent(srv)) != "OK")
+	// 	this->_status = 
 	else if (!checkMethod(*it))
-		return ("HTTP/1.1 405 Method Not Allowed\n");
+		this->_status = "HTTP/1.1 405 Method Not Allowed\n";
 	//else if ()
-	//	return ("HTTP/1.1 301 Moved Permanently\n");
-	else
-		return ("HTTP/1.1 200 OK\n");
-	return (ret);
+	//	this->_status = "HTTP/1.1 301 Moved Permanently\n";
 }
 
 std::string Request::checkContentType()
 {
 	size_t		ret = this->_filename.find(".");
 	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
-	std::cout << YELLOW << "ext : " << ext << RESET << std::endl;
+
+	//std::cout << YELLOW << "ext : " << ext << RESET << std::endl;
 
 	std::vector<std::string>::iterator it = this->_accept.begin();
 
@@ -339,16 +336,22 @@ std::string Request::checkContentType()
 std::string Request::respond(class Server& srv)
 {
 	parseFilename(srv);
-	std::string response = checkStatus(srv);
-	std::string content;
+	std::string response = "";
+	std::string content = "";
 
 	// if (response.find("200") != std::string::npos)
 	// {
 		content = checkContent(srv);
-		response += checkContentType() + "Content-length: " + std::to_string(content.size()) + "\n" + content;
-		std::cout << YELLOW << "response : " << response << RESET << std::endl;
-		std::cout << YELLOW << "status : " << this->_status << RESET << std::endl;
-
+		if (this->_status.empty())
+		{
+			//std::cout << GREEN << "Content : " << content << RESET << std::endl;
+			this->_status = "HTTP/1.1 200 OK\n";
+			response += this->_status + checkContentType() + "Content-length: " + std::to_string(content.size()) + "\n\n" + content;
+			//std::cout << YELLOW << "response : " << response << RESET << std::endl;
+			//std::cout << YELLOW << "status : " << this->_status << RESET << std::endl;
+		}
+		else
+			response = this->_status;
 	// }
 	debug();
 	return (response);
