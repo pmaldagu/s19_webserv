@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 16:43:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/18 15:36:18 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 17:20:31 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,28 +36,28 @@ CGI::CGI() {
 
 /*	Overload CGI Constructor */
 // CGI::CGI(Request request, ParseConf parsing, Server server) {
-CGI::CGI(Request & request, Server & server) {
-		/*	Server variables */
-		_SERVER_NAME = "";
-		_SERVER_SOFTWARE = "";
-		_GATEWAY_INTERFACE = "";
-		/*	Request variables */
-		_SERVER_PORT = "";
-		_REQUEST_METHOD = "";
-		_PATH_INFO = "";
-		_PATH_TRANSLATED = "";
-		_SCRIPT_NAME = "";
-		_QUERY_STRING = "";
-		_REMOTE_ADDR = "";
-		_REMOTE_USER = "";
-		/*	Others */
-		_REDIRECT_STATUS = "";
-		_BODY = "";
-		_extType = "";
+// CGI::CGI(Request & request, Server & server) {
+// 		/*	Server variables */
+// 		_SERVER_NAME = "";
+// 		_SERVER_SOFTWARE = "";
+// 		_GATEWAY_INTERFACE = "";
+// 		/*	Request variables */
+// 		_SERVER_PORT = "";
+// 		_REQUEST_METHOD = "";
+// 		_PATH_INFO = "";
+// 		_PATH_TRANSLATED = "";
+// 		_SCRIPT_NAME = "";
+// 		_QUERY_STRING = "";
+// 		_REMOTE_ADDR = "";
+// 		_REMOTE_USER = "";
+// 		/*	Others */
+// 		_REDIRECT_STATUS = "";
+// 		_BODY = "";
+// 		_extType = "";
 
-		setVariables(request, server);
-		setEnv(&_env[0]);
-}
+// 		// setVariables(request, server);
+// 		// setEnv(&_env[0]);
+// }
 
 CGI::CGI(const CGI & copy) {
 	*this = copy;
@@ -157,11 +157,13 @@ char*	CGI::strcat(std::string s1, std::string s2)
 	CGI will give the result to webserver and it will make response based on
 	this result.
 	https://forhjy.medium.com/42-webserv-cgi-programming-66d63c3b22db */
-int CGI::execute(void)
+int CGI::execute(Request & request, Server & server)
 {
 	int			fd[2], fdIn = dup(STDIN_FILENO), fdOut = dup(STDOUT_FILENO), ret = 1;
 	char		buffer[BUFFERSIZE + 1];
 	std::string	body = "";
+	setVariables(request, server);
+	setEnv(&_env[0]);
 	
 	pipe(fd);
 	if (!fork()) {
@@ -185,6 +187,7 @@ int CGI::execute(void)
 		body += buffer;
 	}
 	_BODY = body;
+	std::cout << BLUE << "BODY : " << _BODY << RESET << std::endl;
 	dup2(fdIn, STDIN_FILENO);
 	dup2(fdOut, STDOUT_FILENO);
 	return (ret);

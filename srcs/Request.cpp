@@ -123,7 +123,8 @@ void Request::parseAccept( void )
 	index += 8;
 	if ( line == this->_buffer.size())
 		throw std::runtime_error("parseAccept() failed");
-	while((ret = _buffer[line].find(",", index)) != std::string::npos || (ret = _buffer[line].find(";", index)) != std::string::npos )
+	while((ret = _buffer[line].find(",", index)) != std::string::npos ||
+			(ret = _buffer[line].find(";", index)) != std::string::npos)
 	{
 		this->_accept.push_back(_buffer[line].substr(index, ret - index));
 		index = ret + 1;
@@ -150,6 +151,9 @@ void Request::parseFilename(class Server& srv)
 				ret = this->_path.rfind("/");
 				this->_filename = this->_path.substr(ret + 1, this->_path.size() - ret - 1);
 				this->_path = this->_root.substr(0, ret);
+			}
+			if (this->_path.empty()) {
+				this->_path = "/";
 			}
 			// else if (!(*it).getIndex().empty())
 			// 	this->_filename = "/" + (*it).getIndex();
@@ -251,7 +255,7 @@ std::vector<class CGI>::iterator	Request::checkCGI(Server & server) {
 
 	for (; it != server.getCGI().end(); it++)
 	{
-		if ((*it).getExtension().find(ext))
+		if ((*it).getExtension().find(ext) != std::string::npos)
 			return (it);
 	}
 	return (it);
@@ -259,29 +263,30 @@ std::vector<class CGI>::iterator	Request::checkCGI(Server & server) {
 
 std::string Request::checkContent(class Server &srv)
 {
+	(void)srv;
 	std::string body;
 	std::ifstream t("." + this->_root + this->_path + this->_filename); //faux
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	// body = buffer.str();
 
-	//std::cout << "body : " << body << std::endl;
+	// std::cout << "body : " << body << std::endl;
 
 	if (!t.is_open())
 	{
 		this->_status = "HTTP/1.1 404 Not found\n";
-		return ("");
+		// return ("");
 	}
 	if (buffer.str().empty())
 	{
 		this->_status = "HTTP/1.1 204 No Content\n";
-		return ("");
+		// return ("");
 	}
 	t.close();
 	std::vector<class CGI>::iterator	it;
 	if ((it = checkCGI(srv)) != srv.getCGI().end()) {
-		(*it).setVariables(*this, srv);
-		(*it).execute();
+		// (*it).setVariables(*this, srv);
+		(*it).execute(*this, srv);
 		body = (*it).getBodyVar();
 	}
 	else
@@ -343,6 +348,7 @@ std::string Request::checkContentType()
 {
 	size_t		ret = this->_filename.find(".");
 	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
+	std::string	type;
 
 	//std::cout << YELLOW << "ext : " << ext << RESET << std::endl;
 
@@ -350,8 +356,12 @@ std::string Request::checkContentType()
 
 	for (; it != this->_accept.end(); it++)
 	{
-		if ((*it).find(ext))
+		if ((*it).find(ext) != std::string::npos)
 			return ("Content-Type: " + (*it) + "\n");
+		if ((ret = (*it).find("*")) != std::string::npos) {
+			type = (*it).substr(0, ret) + ext;
+			return ("Content-Type: " + type + "\n");
+		}
 	}
 	return (""); /////// type de contenu pas accepté /// faut changer quoi
 }

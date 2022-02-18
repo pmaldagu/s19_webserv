@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pmaldagu <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/11 15:46:04 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/02/18 17:19:35 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,10 @@ Webserv::Webserv() : on(1)
 
 Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 {
-	for (size_t i = 0; i < servers.size(); i++)
+	
+	for (size_t i = 0; i < servers.size(); i++) {
 		_servers.push_back(servers[i]);
+	}
 	
 	try
 	{
@@ -55,8 +57,7 @@ Webserv& Webserv::operator=(Webserv const& copy)
 }
 		
 Webserv::~Webserv( void )
-{
-	/* voir destructor de client et server*/
+{	/* voir destructor de client et server*/
 }
 
 /*getter*/
@@ -111,8 +112,10 @@ void Webserv::bindSocket( void )
 	for ( ; it != _servers.end(); it++)
 	{
 		if ((bind((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), 
-				sizeof(struct sockaddr_in))) < 0)
-			throw std::runtime_error("bind() failed");
+				sizeof(struct sockaddr_in))) < 0) {
+			std::cout << BLUE << "BIND ERR : " << std::strerror(errno) << RESET << std::endl;
+			throw std::runtime_error("bind() failed : " + std::to_string((*it).getFd()));
+		}
 	}
 }
 
@@ -240,7 +243,8 @@ std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>:
 	std::cout << GREEN << "-> Send" << RESET << std::endl;
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
-	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer << std::endl; //TODO A CHANGER
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer.substr(0, 100) << std::endl; //TODO A CHANGER
+	// printf("buffer : ", );
 
 	/*close client*/
 	close((*it).getFd());

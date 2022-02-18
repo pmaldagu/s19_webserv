@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 15:55:02 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/18 15:37:21 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 17:06:40 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ class	CGI
 		/* ********************* Constructors/Destructor ******************** */
 		CGI();
 		// CGI(Request request, ParseConf parsing, Server server);
-		CGI(Request & request, Server & server);
+		// CGI(Request & request, Server & server);
 		CGI(const CGI & copy);
 		virtual ~CGI();
 		CGI &	operator=(const CGI & rhs);
@@ -59,7 +59,7 @@ class	CGI
 
 		/* ***************************** Others ***************************** */
 		char *	strcat(std::string s1, std::string s2);
-		int		execute();
+		int		execute(Request & request, Server & server);
 
 	private:
 		/*	Server variables */
