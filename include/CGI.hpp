@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 15:55:02 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/18 17:06:40 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 18:21:59 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ class	CGI
 											URL: http://serveur.org/cgi-bin/monscript.cgi/marecherche
 											PATH_INFO: marecherche */
 		std::string	_PATH_TRANSLATED;	/* Path after conversion. */
-		std::string	_SCRIPT_NAME;		/* Virtual path to the executed script. */
+		std::string	_SCRIPT_FILENAME;		/* Virtual path to the executed script. */
 		std::string	_QUERY_STRING;		/* Holds everythin after '?' in the URL sent by the client.
 											Every variables from a GET form are in QUERY_STRING
 											(var1=val1&var2=...) */

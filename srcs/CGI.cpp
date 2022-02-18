@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 16:43:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/18 17:20:31 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 18:32:19 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ CGI::CGI() {
 		_REQUEST_METHOD = "";
 		_PATH_INFO = "";
 		_PATH_TRANSLATED = "";
-		_SCRIPT_NAME = "";
+		_SCRIPT_FILENAME = "";
 		_QUERY_STRING = "";
 		_REMOTE_ADDR = "";
 		_REMOTE_USER = "";
@@ -46,7 +46,7 @@ CGI::CGI() {
 // 		_REQUEST_METHOD = "";
 // 		_PATH_INFO = "";
 // 		_PATH_TRANSLATED = "";
-// 		_SCRIPT_NAME = "";
+// 		_SCRIPT_FILENAME = "";
 // 		_QUERY_STRING = "";
 // 		_REMOTE_ADDR = "";
 // 		_REMOTE_USER = "";
@@ -75,7 +75,7 @@ CGI &	CGI::operator=(const CGI & rhs) {
 		this->_REQUEST_METHOD = rhs._REQUEST_METHOD;
 		this->_PATH_INFO = rhs._PATH_INFO;
 		this->_PATH_TRANSLATED = rhs._PATH_TRANSLATED;
-		this->_SCRIPT_NAME = rhs._SCRIPT_NAME;
+		this->_SCRIPT_FILENAME = rhs._SCRIPT_FILENAME;
 		this->_QUERY_STRING = rhs._QUERY_STRING;
 		this->_REMOTE_ADDR = rhs._REMOTE_ADDR;
 		this->_REMOTE_USER = rhs._REMOTE_USER;
@@ -102,7 +102,7 @@ void CGI::setVariables(Request & request, Server & server)
 	_SERVER_PORT = server.getPort();
 	_SERVER_SOFTWARE = server.getServername();
 	_GATEWAY_INTERFACE = "CGI/1.1";
-	// _SCRIPT_NAME = server.getCGIPath(); /// root
+	// _SCRIPT_FILENAME = server.getCGIPath(); /// root
 	_PATH_TRANSLATED = (char*)__path.c_str();
 	if (queryMark.find('?') != std::string::npos)
 	{
@@ -127,7 +127,7 @@ void CGI::setEnv(char **env)
 	_env[3] = strcat("SERVER_PORT=", _SERVER_PORT);
 	_env[4] = strcat("SERVER_SOFTWARE=", _SERVER_SOFTWARE);
 	_env[5] = strcat("GATEWAY_INTERFACE=", _GATEWAY_INTERFACE);
-	_env[6] = strcat("SCRIPT_NAME=", _SCRIPT_NAME);
+	_env[6] = strcat("SCRIPT_NAME=", _SCRIPT_FILENAME);
 	_env[7] = strcat("PATH_TRANSLATED=", _PATH_TRANSLATED);
 	_env[8] = strcat("QUERY_STRING=", _QUERY_STRING);
 	_env[9] = strcat("REMOTE_ADDR=", _REMOTE_ADDR);
@@ -164,10 +164,15 @@ int CGI::execute(Request & request, Server & server)
 	std::string	body = "";
 	setVariables(request, server);
 	setEnv(&_env[0]);
-	
+	char	*arg[3];
+
+	arg[0] = (char*)_SCRIPT_FILENAME.c_str();
+	arg[1] = (char*)(request.getRoot() + request.getPath() + request.getFilename()).c_str();
+	arg[2] = NULL;
+
 	pipe(fd);
 	if (!fork()) {
-		dup2(fd[0], STDOUT_FILENO);
+		// dup2(fd[0], STDOUT_FILENO);
 		dup2(fd[1], STDIN_FILENO);
 		close(fd[0]);
 		/*	execve:
@@ -176,18 +181,24 @@ int CGI::execute(Request & request, Server & server)
 			arg[2] = NULL
 			env = has parsed request and some more variables according to RFC3875
 				[see: private attr.] */
-		execve(_SCRIPT_NAME.c_str(), NULL, _env);
-		// exit(0);
+		std::cerr << BLUE << "EXEC start" << RESET << std::endl;
+		execve(arg[0], arg, _env);
+		std::cerr << BLUE << "EXEC finish" << RESET << std::endl;
+		exit(0);
 	}
-	close(fd[1]);
-	dup2(fd[0], 1);
+	waitpid(0, NULL, 0);
+	// close(fd[1]);
+	// dup2(fd[0], 1);
+	// std::cerr << BLUE << "FORK close" << RESET << std::endl;
 	while (ret > 0) {
+		// std::cerr << BLUE << "IN WHILE" << RESET << std::endl;
 		memset(buffer, 0, BUFFERSIZE);
-		ret = read(fd[0], buffer, BUFFERSIZE);
+		ret = read(fd[1], buffer, BUFFERSIZE);
 		body += buffer;
 	}
+	// std::cerr << BLUE << "AFTERWHILE" << RESET << std::endl;
 	_BODY = body;
-	std::cout << BLUE << "BODY : " << _BODY << RESET << std::endl;
+	std::cerr << BLUE << "BODY : " << _BODY << RESET << std::endl;
 	dup2(fdIn, STDIN_FILENO);
 	dup2(fdOut, STDOUT_FILENO);
 	return (ret);
@@ -199,7 +210,7 @@ void	CGI::setRoot(std::string myroot)
 {
     myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
     myroot.erase(0, 4);
-    this->_SCRIPT_NAME = myroot;
+    this->_SCRIPT_FILENAME = myroot;
 }
 
 void	CGI::setExtension(std::string ext) {
@@ -213,7 +224,7 @@ void	CGI::setExtension(std::string ext) {
 
 std::string CGI::getRoot() const
 {
-	return (this->_SCRIPT_NAME);
+	return (this->_SCRIPT_FILENAME);
 }
 
 std::string	CGI::getExtension() const 
