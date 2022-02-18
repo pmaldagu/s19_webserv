@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
+/*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 15:55:02 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/16 15:58:13 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 15:37:21 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,19 +50,16 @@ class	CGI
 		/* **************************** Accessors *************************** */
 		void		setVariables(Request & request, Server & server);
 		void		setEnv(char **env);
+		void		setRoot(std::string root);
+		void		setExtension(std::string ext);
+
 		std::string	getBodyVar() const;
+		std::string getRoot() const;
+		std::string	getExtension() const;
 
 		/* ***************************** Others ***************************** */
 		char *	strcat(std::string s1, std::string s2);
 		int		execute();
-
-		/* ***************************** Setters ***************************** */
-
-		void setRoot(std::string root);
-
-		/* ***************************** Getters ***************************** */
-
-		std::string getRoot() const;
 
 	private:
 		/*	Server variables */
@@ -85,6 +82,7 @@ class	CGI
 		/*	Others */
 		std::string	_REDIRECT_STATUS;
 		std::string	_BODY;
+		std::string	_extType;
 		char		*_env[14];
 };
 

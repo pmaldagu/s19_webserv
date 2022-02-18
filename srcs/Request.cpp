@@ -240,14 +240,30 @@ std::string Request::getStatus( void ) const
 	return (this->_status);
 }
 
-/*check*/
+/*	check */
+std::vector<class CGI>::iterator	Request::checkCGI(Server & server) {
+	size_t		ret = this->_filename.find(".");
+	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
+
+	//std::cout << YELLOW << "ext : " << ext << RESET << std::endl;
+
+	std::vector<class CGI>::iterator it = server.getCGI().begin();
+
+	for (; it != server.getCGI().end(); it++)
+	{
+		if ((*it).getExtension().find(ext))
+			return (it);
+	}
+	return (it);
+}
+
 std::string Request::checkContent(class Server &srv)
 {
-	(void)srv;
+	std::string body;
 	std::ifstream t("." + this->_root + this->_path + this->_filename); //faux
 	std::stringstream buffer;
 	buffer << t.rdbuf();
-	std::string body = buffer.str();
+	// body = buffer.str();
 
 	//std::cout << "body : " << body << std::endl;
 
@@ -262,6 +278,14 @@ std::string Request::checkContent(class Server &srv)
 		return ("");
 	}
 	t.close();
+	std::vector<class CGI>::iterator	it;
+	if ((it = checkCGI(srv)) != srv.getCGI().end()) {
+		(*it).setVariables(*this, srv);
+		(*it).execute();
+		body = (*it).getBodyVar();
+	}
+	else
+		body = buffer.str();
 	return (body);
 }
 

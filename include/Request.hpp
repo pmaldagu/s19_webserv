@@ -44,13 +44,14 @@ class Request
 		std::string					respond(class Server& srv);
 		
 		/*check*/
-		std::string					checkBody(int fd);
-		std::vector<class Location>::iterator checkPath(class Server &srv);
-		bool						checkMethod(Location& location);
-		void						checkStatus(class Server& srv);
-		std::string					checkType(class Server& srv);
-		std::string					checkContent(class Server &srv);
-		std::string					checkContentType();
+		std::string								checkBody(int fd);
+		std::vector<class Location>::iterator	checkPath(class Server &srv);
+		bool									checkMethod(Location& location);
+		void									checkStatus(class Server& srv);
+		std::string								checkType(class Server& srv);
+		std::string								checkContent(class Server &srv);
+		std::string								checkContentType();
+		std::vector<class CGI>::iterator		checkCGI(Server & server);
 
 		/*debug*/
 		void						debug( void );

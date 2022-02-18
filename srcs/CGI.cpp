@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
+/*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 16:43:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/16 16:01:36 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/18 15:36:18 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ CGI::CGI() {
 		/*	Others */
 		_REDIRECT_STATUS = "";
 		_BODY = "";
+		_extType = "";
 }
 
 /*	Overload CGI Constructor */
@@ -52,6 +53,7 @@ CGI::CGI(Request & request, Server & server) {
 		/*	Others */
 		_REDIRECT_STATUS = "";
 		_BODY = "";
+		_extType = "";
 
 		setVariables(request, server);
 		setEnv(&_env[0]);
@@ -78,6 +80,7 @@ CGI &	CGI::operator=(const CGI & rhs) {
 		this->_REMOTE_ADDR = rhs._REMOTE_ADDR;
 		this->_REMOTE_USER = rhs._REMOTE_USER;
 		this->_REDIRECT_STATUS = rhs._REDIRECT_STATUS;
+		this->_extType = rhs._extType;
 	}
 	return (*this);
 }
@@ -171,7 +174,7 @@ int CGI::execute(void)
 			arg[2] = NULL
 			env = has parsed request and some more variables according to RFC3875
 				[see: private attr.] */
-		//execve(_SCRIPT_NAME.c_str(), NULL, _env);
+		execve(_SCRIPT_NAME.c_str(), NULL, _env);
 		// exit(0);
 	}
 	close(fd[1]);
@@ -189,11 +192,18 @@ int CGI::execute(void)
 
 /* ***************************** Setters ***************************** */
 
-void CGI::setRoot(std::string myroot)
+void	CGI::setRoot(std::string myroot)
 {
     myroot.erase(std::remove_if(myroot.begin(), myroot.end(), isspace), myroot.end());
     myroot.erase(0, 4);
     this->_SCRIPT_NAME = myroot;
+}
+
+void	CGI::setExtension(std::string ext) {
+    ext.erase(std::remove_if(ext.begin(), ext.end(), isspace), ext.end());
+    ext.erase(0, 10);
+	ext.erase(ext.size() - 1);
+    this->_extType = ext;
 }
 
 /* ***************************** Getters ***************************** */
@@ -201,4 +211,9 @@ void CGI::setRoot(std::string myroot)
 std::string CGI::getRoot() const
 {
 	return (this->_SCRIPT_NAME);
+}
+
+std::string	CGI::getExtension() const 
+{
+	return (this->_extType);
 }

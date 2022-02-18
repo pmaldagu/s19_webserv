@@ -123,6 +123,7 @@ std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iter
     std::vector<std::string>::iterator it = iterator;
 
     CGI *newCGI = new CGI;
+    newCGI->setExtension(*it);
     while ((*it).find("}") == std::string::npos)
     {
         if ((*it).find("root") != std::string::npos)
