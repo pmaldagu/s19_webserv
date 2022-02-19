@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 16:43:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/02/18 18:32:19 by namenega         ###   ########.fr       */
+/*   Updated: 2022/02/19 11:03:35 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,52 +157,99 @@ char*	CGI::strcat(std::string s1, std::string s2)
 	CGI will give the result to webserver and it will make response based on
 	this result.
 	https://forhjy.medium.com/42-webserv-cgi-programming-66d63c3b22db */
-int CGI::execute(Request & request, Server & server)
-{
-	int			fd[2], fdIn = dup(STDIN_FILENO), fdOut = dup(STDOUT_FILENO), ret = 1;
-	char		buffer[BUFFERSIZE + 1];
-	std::string	body = "";
+// int CGI::execute(Request & request, Server & server)
+// {
+// 	int			fd[2], fdIn = dup(STDIN_FILENO), fdOut = dup(STDOUT_FILENO), ret = 1;
+// 	char		buffer[BUFFERSIZE + 1];
+// 	std::string	body = "";
+// 	setVariables(request, server);
+// 	setEnv(&_env[0]);
+// 	char	*arg[3];
+
+// 	arg[0] = (char*)_SCRIPT_FILENAME.c_str();
+// 	arg[1] = (char*)(request.getRoot() + request.getPath() + request.getFilename()).c_str();
+// 	arg[2] = NULL;
+
+// 	pipe(fd);
+// 	if (!fork()) {
+// 		// dup2(fd[0], STDOUT_FILENO);
+// 		dup2(fd[1], STDIN_FILENO);
+// 		close(fd[0]);
+// 		/*	execve:
+// 			arg[0] = path of cgi program or cgi script
+// 			arg[1] = path of cgi file
+// 			arg[2] = NULL
+// 			env = has parsed request and some more variables according to RFC3875
+// 				[see: private attr.] */
+// 		std::cerr << BLUE << "EXEC start" << RESET << std::endl;
+// 		execve(arg[0], arg, _env);
+// 		std::cerr << BLUE << "EXEC finish" << RESET << std::endl;
+// 		exit(0);
+// 	}
+// 	waitpid(0, NULL, 0);
+// 	// close(fd[1]);
+// 	// dup2(fd[0], 1);
+// 	// std::cerr << BLUE << "FORK close" << RESET << std::endl;
+// 	while (ret > 0) {
+// 		// std::cerr << BLUE << "IN WHILE" << RESET << std::endl;
+// 		memset(buffer, 0, BUFFERSIZE);
+// 		ret = read(fd[1], buffer, BUFFERSIZE);
+// 		body += buffer;
+// 	}
+// 	// std::cerr << BLUE << "AFTERWHILE" << RESET << std::endl;
+// 	_BODY = body;
+// 	std::cerr << BLUE << "BODY : " << _BODY << RESET << std::endl;
+// 	dup2(fdIn, STDIN_FILENO);
+// 	dup2(fdOut, STDOUT_FILENO);
+// 	return (ret);
+// }
+
+int CGI::execute(Request & request, Server & server) {
+	// pid_t	pid;
+	// char	readingBuff;
 	setVariables(request, server);
 	setEnv(&_env[0]);
-	char	*arg[3];
+	std::cout << BLUE << "REQUEST_METHOD : " << _REQUEST_METHOD << RESET << std::endl;
 
-	arg[0] = (char*)_SCRIPT_FILENAME.c_str();
-	arg[1] = (char*)(request.getRoot() + request.getPath() + request.getFilename()).c_str();
-	arg[2] = NULL;
+	// int	ipipe[2], opipe[2];
+	// if (pipe(opipe) == -1)
+	// 	throw std::runtime_error("Execute() - pipe(opipe) failed.");
+	// //code = (code == 413) ? 413 : 200;
+	// if (_REQUEST_METHOD == "POST" && pipe(ipipe) == -1)
+	// 	throw std::runtime_error("Execute() - pipe(ipipe) failed.");
+	// pid = fork();
+	// if (pid < 0)
+	// 	throw std::runtime_error("Execute() - fork() failed.");
+	// else if (pid == 0) {
+	// 	char	*arg[3];
 
-	pipe(fd);
-	if (!fork()) {
-		// dup2(fd[0], STDOUT_FILENO);
-		dup2(fd[1], STDIN_FILENO);
-		close(fd[0]);
-		/*	execve:
-			arg[0] = path of cgi program or cgi script
-			arg[1] = path of cgi file
-			arg[2] = NULL
-			env = has parsed request and some more variables according to RFC3875
-				[see: private attr.] */
-		std::cerr << BLUE << "EXEC start" << RESET << std::endl;
-		execve(arg[0], arg, _env);
-		std::cerr << BLUE << "EXEC finish" << RESET << std::endl;
-		exit(0);
-	}
-	waitpid(0, NULL, 0);
-	// close(fd[1]);
-	// dup2(fd[0], 1);
-	// std::cerr << BLUE << "FORK close" << RESET << std::endl;
-	while (ret > 0) {
-		// std::cerr << BLUE << "IN WHILE" << RESET << std::endl;
-		memset(buffer, 0, BUFFERSIZE);
-		ret = read(fd[1], buffer, BUFFERSIZE);
-		body += buffer;
-	}
-	// std::cerr << BLUE << "AFTERWHILE" << RESET << std::endl;
-	_BODY = body;
-	std::cerr << BLUE << "BODY : " << _BODY << RESET << std::endl;
-	dup2(fdIn, STDIN_FILENO);
-	dup2(fdOut, STDOUT_FILENO);
-	return (ret);
+	// 	arg[0] = (char*)_SCRIPT_FILENAME.c_str();
+	// 	arg[1] = (char*)(request.getRoot() + request.getPath() + request.getFilename()).c_str();
+	// 	arg[2] = NULL;
+
+	// 	if (_REQUEST_METHOD == "POST" /*&& code != 413*/) {
+	// 		close(ipipe[1]);
+	// 		if (dup2(ipipe[0], 0) == -1)
+	// 			throw std::runtime_error("Execute() - dup2() ipipe[0] failed.");
+	// 	}
+	// 	close(opipe[0]);
+	// 	if (dup2(opipe[1], 1) == -1)
+	// 		throw std::runtime_error("Execute() - dup2() opipe[1] failed.");
+	// 	if (execve(arg[0], arg, _env) < 0)
+	// 		throw std::runtime_error("Execute() - execve() failed.");
+	// }
+	// close(opipe[1]);
+	// if (_REQUEST_METHOD == "POST"/* && code != 413*/) {
+	// 	close(ipipe[0]);
+	// 	close(ipipe[1]);
+	// }
+	// wait(0);
+	// while (read(opipe[0], &readingBuff, 1) > 0)
+	// 	_BODY += readingBuff;
+	// close(opipe[0]);
+	return (0);
 }
+
 
 /* ***************************** Setters ***************************** */
 
