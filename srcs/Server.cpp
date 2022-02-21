@@ -47,6 +47,24 @@ Server& Server::operator=(Server const& copy)
     return (*this);
 }
 
+bool Server::checkCGILine(std::string line)
+{
+    //P(line, "line");
+    line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+    if (!line.empty())
+        return (false);
+    return (true);
+}
+
+bool Server::checkLocationLine(std::string line)
+{
+    //P(line, "line");
+    line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+    if (!line.empty())
+        return (false);
+    return (true);
+}
+
 /*setter*/
 void Server::setFd(int fd)
 {
@@ -114,20 +132,22 @@ void Server::setIndex(std::string index)
     this->_index = index;
 }
 
-/////////////////////////////////////////////////////////////////////
-///////////////////////////// NATHAN ////////////////////////////////
-/////////////////////////////////////////////////////////////////////
-
 std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator)
 {
     std::vector<std::string>::iterator it = iterator;
 
     CGI *newCGI = new CGI;
-    newCGI->setExtension(*it);
     while ((*it).find("}") == std::string::npos)
     {
-        if ((*it).find("root") != std::string::npos)
+        if ((*it).find("*") != std::string::npos)
+            newCGI->setExtension(*it);
+        else if ((*it).find("root") != std::string::npos)
             newCGI->setRoot(*it);
+        else if (!checkCGILine(*it))
+        {
+            delete newCGI;
+            throw std::runtime_error("(.conf parsing CGI): line parsing failed.");
+        }
         it++;
     }
     this->_cgi.push_back(*newCGI);
@@ -172,6 +192,11 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
                 newLocation->setPostMethod(true);
             if ((*it).find("DELETE") != std::string::npos)
                 newLocation->setDeleteMethod(true);
+        }
+        else if (!checkLocationLine(*it))
+        {
+            delete newLocation;
+            throw std::runtime_error("(.conf parsing Location): line parsing failed.");
         }
         it++;
     }

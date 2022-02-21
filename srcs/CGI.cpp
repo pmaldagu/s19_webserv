@@ -250,7 +250,6 @@ int CGI::execute(Request & request, Server & server) {
 	return (0);
 }
 
-
 /* ***************************** Setters ***************************** */
 
 void	CGI::setRoot(std::string myroot)
@@ -260,8 +259,11 @@ void	CGI::setRoot(std::string myroot)
     this->_SCRIPT_FILENAME = myroot;
 }
 
-void	CGI::setExtension(std::string ext) {
+void	CGI::setExtension(std::string ext)
+{
     ext.erase(std::remove_if(ext.begin(), ext.end(), isspace), ext.end());
+	if ((ext.find("location*.") == std::string::npos) || (ext[ext.size() - 1] != '{'))
+		throw std::runtime_error("(.conf parsing CGI) : wrong extension name.");
     ext.erase(0, 10);
 	ext.erase(ext.size() - 1);
     this->_extType = ext;

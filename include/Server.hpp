@@ -12,6 +12,9 @@ class Server
 
         Server&                             operator=(Server const& copy);
 
+        bool                                checkLocationLine(std::string line);
+        bool                                checkCGILine(std::string line);
+
 				/*setter*/
 				void																setFd(int fd);
         void                                setRoot(std::string myroot);

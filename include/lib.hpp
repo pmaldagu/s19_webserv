@@ -36,6 +36,6 @@
 #define YELLOW  "\033[33m"
 #define BLUE    "\033[34m"
 
-#define P(x, name) std::cout << YELLOW << name << " : " << x << RESET << std::endl;
+#define P(x, name) std::cout << name << " : " << YELLOW << x << RESET << std::endl;
 
 #endif

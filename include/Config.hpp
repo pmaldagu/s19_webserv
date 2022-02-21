@@ -12,6 +12,8 @@ class Config
 
         Config&                     operator=(Config const& copy);
 
+        bool                        checkServerLine(std::string line);
+
         void                        setServ();
 
         std::vector<class Server>&  getServ();

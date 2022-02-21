@@ -51,6 +51,21 @@ Config& Config::operator=(Config const& copy)
     return (*this);
 }
 
+bool Config::checkServerLine(std::string line)
+{
+    //P(line, "line");
+    line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+    if (line.find("server") != std::string::npos)
+    {
+        if ((line.find("server{") == std::string::npos) || (line[line.size() - 1] != '{'))
+            return (false);
+        return (true);
+    }
+    if (!line.empty())
+        return (false);
+    return (true);
+}
+
 void Config::setServ()
 {
     std::vector<std::string>::iterator  it;
@@ -58,7 +73,7 @@ void Config::setServ()
 
     for (it = this->_data.begin(); it != it_end; it++)
     {
-        if ((*it).find("server {") != std::string::npos)
+        if ((*it).find("server") != std::string::npos)
         {
             Server *newServ = new Server;
             while ((*it).find("}") == std::string::npos)
@@ -86,6 +101,11 @@ void Config::setServ()
                     newServ->setIndex(*it);
                 else if ((*it).find("server_name") != std::string::npos)
                     newServ->setServername(*it);
+                else if (!checkServerLine(*it))
+                {
+                    delete newServ;
+                    throw std::runtime_error("(.conf parsing Server): line parsing failed.");
+                }
                 it++;
             }
 			newServ->setSockaddr();
