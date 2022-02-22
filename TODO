@@ -1,32 +1,30 @@
-# Referenec
-
-- http://nginx.org/en/docs/beginners_guide.html
-
-# Parser config file (Nginx like HTTP 1.1 compliant)
-
-- plusieurs serveur 
-- choisir le port et le host
-- pages d'erreur
-- limiter client body size
+1. auto index
+2. Error page
+3. DELETE
+4. bad extension
+5. POST
 
 
-# Exemple config file
+///////////////////////////////////////////////////
 
-http {
-	server {
-		listen 8080;
-		server_name host;
-		root /
-		location / {
-			root /data/www;
-		}
-		location /images/ {
-			/data;
-		}
-		location /somedir {						# https://www.netsparker.com/blog/web-security/disable-directory-listing-web-servers/
-               autoindex on;
-        }
-	server {
-	}
-	}
-}
+1. Récupérer buffer
+2. Parse le type
+3. Parse le path complet
+4. Parse le httver
+5. Trouver le location
+6. Parse filename
+
+----> GETRequest()
+        1. Parse accept
+        2. Regarder si l'extension est acceptée
+        3. Récupérer body du cgi ou location
+        4. Créer le header si body existe
+
+----> POSTRequest()
+
+----> DELETERequest()
+        1. Regarder si le fichier existe
+        2. Supprimer le fichier s'il existe
+        3. Créer header si réussi
+
+///////////////////////////////////////////////////

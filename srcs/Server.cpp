@@ -33,6 +33,9 @@ Server& Server::operator=(Server const& copy)
         this->_server_name = copy._server_name;
         this->_redirection = copy._redirection;
         this->_index = copy._index;
+        this->_get_method = copy._get_method;
+        this->_post_method = copy._post_method;
+        this->_delete_method = copy._delete_method;
         this->_cgi.clear();
         for (size_t a = 0; a < copy._cgi.size(); a++)
             this->_cgi.push_back(copy._cgi[a]);
@@ -132,6 +135,24 @@ void Server::setIndex(std::string index)
     this->_index = index;
 }
 
+void Server::setGetMethod(bool b)
+{
+    if (b == true)
+        this->_get_method = true;
+}
+
+void Server::setPostMethod(bool b)
+{
+    if (b == true)
+        this->_post_method = true;
+}
+
+void Server::setDeleteMethod(bool b)
+{
+    if (b == true)
+        this->_delete_method = true;
+}
+
 std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator)
 {
     std::vector<std::string>::iterator it = iterator;
@@ -202,9 +223,9 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     }
     if (newLocation->getGetMethod() == 0 && newLocation->getPostMethod() == 0 && newLocation->getDeleteMethod() == 0)
     {
-       newLocation->setGetMethod(true);
-       newLocation->setPostMethod(true);
-       newLocation->setDeleteMethod(true);
+       newLocation->setGetMethod(this->getGetMethod());
+       newLocation->setPostMethod(this->getPostMethod());
+       newLocation->setDeleteMethod(this->getDeleteMethod());
     }
     this->_location_vector.push_back(*newLocation);
     delete newLocation;
@@ -262,6 +283,21 @@ std::string Server::getIndex() const
     return (this->_index);
 }
 
+bool Server::getGetMethod() const
+{
+    return (this->_get_method);
+}
+
+bool Server::getPostMethod() const
+{
+    return (this->_post_method);
+}
+
+bool Server::getDeleteMethod() const
+{
+    return (this->_delete_method);
+}
+
 std::vector<class CGI>& Server::getCGI()
 {
     return (this->_cgi);
@@ -281,6 +317,9 @@ void Server::debug()
     std::cout << GREEN << "   -Host : " << RESET << this->getHost() << std::endl;
     std::cout << GREEN << "   -TimeOut : " << RESET << this->getTimeout() << std::endl;
     std::cout << GREEN << "   -Index : " << RESET << this->getIndex() << std::endl;
+    std::cout << GREEN << "   -Get method : " << RESET << this->getGetMethod() << std::endl;
+    std::cout << GREEN << "   -Post method : " << RESET << this->getPostMethod() << std::endl;
+    std::cout << GREEN << "   -Delete method : " << RESET << this->getDeleteMethod() << std::endl;
     std::cout << GREEN << "   -Return : " << RESET << this->getRedirection() << std::endl;
     std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
     std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;

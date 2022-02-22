@@ -210,7 +210,7 @@ bool Webserv::receiveRequest(std::list<class Client>::iterator it)
 	
 	/*link request to client*/
 	if (buffer[0] != 0)
-		(*it).setRequest(Request(buffer));
+		(*it).setRequest(Request(buffer, getServer((*it).getFd())));
 	else
 	{
 		close((*it).getFd());

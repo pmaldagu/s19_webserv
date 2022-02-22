@@ -101,12 +101,27 @@ void Config::setServ()
                     newServ->setIndex(*it);
                 else if ((*it).find("server_name") != std::string::npos)
                     newServ->setServername(*it);
+                else if ((*it).find("http_methods") != std::string::npos)
+                {
+                    if ((*it).find("GET") != std::string::npos)
+                        newServ->setGetMethod(true);
+                    if ((*it).find("POST") != std::string::npos)
+                        newServ->setPostMethod(true);
+                    if ((*it).find("DELETE") != std::string::npos)
+                        newServ->setDeleteMethod(true);
+                } 
                 else if (!checkServerLine(*it))
                 {
                     delete newServ;
                     throw std::runtime_error("(.conf parsing Server): line parsing failed.");
                 }
                 it++;
+            }
+            if (newServ->getGetMethod() == 0 && newServ->getPostMethod() == 0 && newServ->getDeleteMethod() == 0)
+            {
+                newServ->setGetMethod(true);
+                newServ->setPostMethod(true);
+                newServ->setDeleteMethod(true);
             }
 			newServ->setSockaddr();
             this->_serv_vector.push_back(*newServ);
