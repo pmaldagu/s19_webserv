@@ -18,7 +18,7 @@ class Request
 		void								parseHttpVersion();
 		void								parseType( void );
 		void								parsePath( void );
-		void								parseLocation(Server& srv)
+		void								parseLocation(Server& srv);
 		void								parseFilename(class Server& srv);
 
 		/*getter*/
@@ -29,7 +29,7 @@ class Request
 		std::string							getHttpver( void ) const;
 		std::string							getRoot( void ) const;
 		std::string							getFilename( void ) const;
-		std::string							getStatus( void ) const;
+		bool								getBadStatus( void ) const;
 
 		/*respond*/
 		std::string							errorPage(std::string str);
@@ -37,14 +37,13 @@ class Request
 		
 		/*check*/
 		std::string							checkBody(int fd);
-		std::string							checkType(class Server& srv);
-		std::string							checkContent(class Server &srv);
-		std::string							checkContentType();
-		std::list<class CGI>::iterator		checkCGI(Server & server);
+		std::vector<class CGI>::iterator		checkCGI(Server & server);
 
 		/*GET request*/
 		std::string							GETRequest(Server& srv);
 		void								parseAccept( void );
+		std::string							GETResponse(class Server &srv);
+		std::string							contentType();
 		//std::string							createHeader(class Server& srv);
 
 		/*POST request*/
@@ -64,7 +63,7 @@ class Request
 		std::string				_httpver;
 		std::string				_filename;
 		std::string				_root;
-		std::string				_status;
+		bool					_bad_status;
 		Location*				_location;
 };
 

@@ -6,21 +6,19 @@
 
 /*liste de status utile*/
 //user agent ???
-// 200 OK => tt reussi
+// 200 OK => tt reussi--------------------------------------------------------------V
 // 201 => post a bien rajouter
-// 204 => no content
-// 300 => multiple choice (plein de ficher)
+// 204 => no content----------------------------------------------------------------V
+// 300 => multiple choice (plein de ficher)-----------------------------------------X
 // 301 => move permently renvoi l'url dans le body
 // 400 => bad request mais tres peu probable
 // 403 => forbiden pas les droits (??? doute)
-// 404 => not found
+// 404 => not found-----------------------------------------------------------------V
 // 405 => method not allow, methode pas accepter par la location
 // 431 => header trop large
 // 501 => not implemented, par exemple HEAD
 // 503 => service unavaible, si select crash (ou 500 Internal Server error ?)
 // 505 => http version not supported
-
-
 
 Request::Request( void )
 {
@@ -58,13 +56,15 @@ Request& Request::operator=(Request const& copy)
 		this->_filename = copy._filename;
 		this->_httpver = copy._httpver;
 		this->_root = copy._root;
-		this->_status = copy._status;
+		this->_bad_status = copy._bad_status;
 		this->_location = copy._location;
     }
     return (*this);
 }
 
-/*parser*/
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Parser ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Request::splitBuffer(char* buffer)
 {
 	std::string tmp(buffer);
@@ -80,42 +80,42 @@ void Request::splitBuffer(char* buffer)
 
 void Request::parseHttpVersion()
 {
+	std::list<std::string>::iterator it = this->_buffer.begin();
 	size_t ret = 0;
 
 	for (int i = 0; i < 2; i++)
-		ret = _buffer[0].find(" ", ret + 1);
-	this->_httpver = _buffer[0].substr(ret + 1, _buffer[0].size() - ret - 2);
+		ret = (*it).find(" ", ret + 1);
+	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 2);
 }
 
 void Request::parseType( void )
 {
 	size_t ret = 0;
 
-	ret = _buffer[0].find(" ");
-	this->_type = _buffer[0].substr(0 , ret);
+	ret = this->_buffer.begin()->find(" ");
+	this->_type = this->_buffer.begin()->substr(0 , ret);
 }
 
 void Request::parsePath( void )
 {
 	size_t ret = 0;
 
-	ret = _buffer[0].find(" ");
-	this->_path = _buffer[0].substr(ret + 1, _buffer[0].find(" ", ret + 1) - ret - 1);
+	ret = this->_buffer.begin()->find(" ");
+	this->_path = this->_buffer.begin()->substr(ret + 1, this->_buffer.begin()->find(" ", ret + 1) - ret - 1);
 }
 
-void parseLocation(Server& srv)
+void Request::parseLocation(Server& srv)
 {
 	std::vector<class Location>::iterator	it = srv.getLocation().begin();
-	size_t									ret = 0;
 
-	this->_location = (*it);
+	this->_location = &(*it);
 	for (; it != srv.getLocation().end(); it++)
 	{
 		if (this->_path.find((*it).getPath()) != std::string::npos && (*it).getPath().size() != 1)
 		{
 			this->_root = (*it).getRoot();
 			this->_path = this->_path.substr((*it).getPath().size(), this->_path.size() - 1);
-			this->_location = (*it);
+			this->_location = &(*it);
 			break ;
 		}
 	}
@@ -125,6 +125,7 @@ void parseLocation(Server& srv)
 
 void Request::parseFilename(class Server& srv)
 {
+	size_t ret = 0;
 	if ((ret = this->_path.rfind(".")) != std::string::npos)
 	{
 		ret = this->_path.rfind("/");
@@ -135,14 +136,16 @@ void Request::parseFilename(class Server& srv)
 	{
 		////////// auto index
 		if (!this->_location->getIndex().empty())
-			this->_filename = "/" + (*it).getIndex();
+			this->_filename = "/" + this->_location->getIndex();
 		else
 			this->_filename = "/" + srv.getIndex();
 	}
 }
 
-/*getter*/
-std::vector<std::string> Request::getBuffer( void ) const
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Getters ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+std::list<std::string> Request::getBuffer( void ) const
 {
 	return (this->_buffer);
 }
@@ -157,7 +160,7 @@ std::string Request::getPath( void ) const
 	return (this->_path);
 }
 
-std::vector<std::string> Request::getAccept( void ) const
+std::list<std::string> Request::getAccept( void ) const
 {
 	return (this->_accept);
 }
@@ -177,12 +180,14 @@ std::string Request::getFilename( void ) const
 	return (this->_filename);
 }
 
-std::string Request::getStatus( void ) const
+bool Request::getBadStatus( void ) const
 {
-	return (this->_status);
+	return (this->_bad_status);
 }
 
-/*	check */
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////// CGI /////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 std::vector<class CGI>::iterator	Request::checkCGI(Server & server)
 {
 	size_t		ret = this->_filename.find(".");
@@ -197,53 +202,9 @@ std::vector<class CGI>::iterator	Request::checkCGI(Server & server)
 	return (it);
 }
 
-std::string Request::checkContent(class Server &srv)
-{
-	(void)srv;
-	std::string body;
-	std::ifstream t("." + this->_root + this->_path + this->_filename);
-	std::stringstream buffer;
-	buffer << t.rdbuf();
-	// body = buffer.str();
-
-	if (!t.is_open())
-		this->_status = "HTTP/1.1 404 Not found\n";
-	// if (buffer.str().empty())
-	// 	this->_status = "HTTP/1.1 204 No Content\n";
-	t.close();
-	std::vector<class CGI>::iterator	it;
-	if ((it = checkCGI(srv)) != srv.getCGI().end())
-	{
-		(*it).execute(*this, srv);
-		body = (*it).getBodyVar();
-	}
-	else
-		body = buffer.str();
-	return (body);
-}
-
-std::string Request::checkContentType()
-{
-	size_t		ret = this->_filename.find(".");
-	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
-	std::string	type;
-
-	std::vector<std::string>::iterator it = this->_accept.begin();
-
-	for (; it != this->_accept.end(); it++)
-	{
-		if ((*it).find(ext) != std::string::npos)
-			return ("Content-Type: " + (*it) + "\n");
-		if ((ret = (*it).find("/*")) != std::string::npos) {
-			type = (*it).substr(0, ret) + ext;
-			return ("Content-Type: " + type + "\n");
-		}
-	}
-	return (""); /////// type de contenu pas accepté /// faut changer quoi
-}
-
-/*respond*/
-
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Respond ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 std::string Request::errorPage(std::string str)
 {
 	size_t				ret = 0;
@@ -255,11 +216,11 @@ std::string Request::errorPage(std::string str)
 
 	ret = error.find("STATUS");
 	error.erase(ret, ret + 6);
-	if (str.empty())
-		error.insert(ret, this->_status);
-	else
+	// if (str.empty())
+	// 	error.insert(ret, this->_bad_status);
+	//else
 		error.insert(ret, str);
-	return (error);
+	return (str + "Content-Type: text/html\nContent-length: " + std::to_string(error.size()) + "\n\n" + error);
 }
 
 //else if ()
@@ -267,7 +228,7 @@ std::string Request::errorPage(std::string str)
 std::string Request::respond(class Server& srv)
 {
 	if (this->_httpver != "HTTP/1.1")
-		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n");
+		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
 	else if ((this->_type == "GET" && !this->_location->getGetMethod()) ||
 			(this->_type == "POST" && !this->_location->getPostMethod()) ||
 			(this->_type == "DELETE" && !this->_location->getDeleteMethod()))
@@ -275,47 +236,114 @@ std::string Request::respond(class Server& srv)
 	else if (this->_type == "GET")
 		return (GETRequest(srv));
 	else if (this->_type == "POST")
-		return (POSTRequest(srv))
+		return (POSTRequest(srv));
 	else if (this->_type == "DELETE")
-		return (DELETERequest(srv))
+		return (DELETERequest(srv));
 	else
-		return (errorPage("HTTP/1.1 501 Not Implemented\n"))
+		return (errorPage("HTTP/1.1 501 Not Implemented\n"));
 }
 
-/*GET request*/
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////// GET request //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 std::string Request::GETRequest(Server& srv)
 {
 	parseAccept();
-
+	return (GETResponse(srv));
 }
 
 void Request::parseAccept( void )
 {
-	size_t line = 0;
 	size_t index = 0;
 	size_t ret = 0;
+	std::list<std::string>::iterator it = this->_buffer.begin();
 
-	while (line < this->_buffer.size())
+	for (; it != this->_buffer.end(); it++)
 	{
-		if ((index = this->_buffer[line].find("Accept: ")) != std::string::npos)
+		if ((index = (*it).find("Accept: ")) != std::string::npos)
 			break;
-		line++;
 	}
 	index += 8;
-	if ( line == this->_buffer.size())
+	if (it == this->_buffer.end())
 		throw std::runtime_error("parseAccept() failed");
-	while((ret = _buffer[line].find(",", index)) != std::string::npos ||
-			(ret = _buffer[line].find(";", index)) != std::string::npos)
+	while((ret = (*it).find(",", index)) != std::string::npos ||
+			(ret = (*it).find(";", index)) != std::string::npos)
 	{
-		this->_accept.push_back(_buffer[line].substr(index, ret - index));
+		this->_accept.push_back((*it).substr(index, ret - index));
 		index = ret + 1;
 	}
 }
 
-/*Post request*/
+std::string Request::GETResponse(class Server &srv)
+{
+	(void)srv;
+	std::string body;
+	//std::string contentType;
+	std::ifstream t("." + this->_root + this->_path + this->_filename);
+	std::stringstream buffer;
+	buffer << t.rdbuf();
 
-/*Delete request*/
-void Request::DELETERequest()
+	if (t.is_open() && buffer.str().empty())
+	{
+		t.close();
+		return (errorPage("HTTP/1.1 204 No Content\n"));
+	}
+	if (!t.is_open())
+	{
+		t.close();
+		return (errorPage("HTTP/1.1 404 Not found\n"));
+	}
+	t.close();
+
+	std::vector<class CGI>::iterator	it;
+	
+	if ((it = checkCGI(srv)) != srv.getCGI().end())
+	{
+		(*it).execute(*this, srv);
+		body = (*it).getBodyVar();
+	}
+	else
+		body = buffer.str();
+	//contentType = contentType();
+	// if (contentType.empty())
+	// 	return ()
+	return ("HTTP/1.1 200 OK\n" + contentType() + "Content-length: " + std::to_string(body.size()) + "\n\n" + body);
+}
+
+std::string Request::contentType()
+{
+	size_t		ret = this->_filename.find(".");
+	std::string	ext = this->_filename.substr(ret + 1, this->_filename.size() - 1);
+	std::string	type;
+
+	std::list<std::string>::iterator it = this->_accept.begin();
+
+	for (; it != this->_accept.end(); it++)
+	{
+		if ((*it).find(ext) != std::string::npos)
+			return ("Content-Type: " + (*it) + "\n");
+		if ((ret = (*it).find("/*")) != std::string::npos) {
+			type = (*it).substr(0, ret + 1) + ext;
+			return ("Content-Type: " + type + "\n");
+		}
+	}
+	return (""); /////// type de contenu pas accepté /// faut changer quoi
+}
+
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////// POST request /////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+std::string Request::POSTRequest(Server& srv)
+{
+	(void)srv;
+	return ("POST Request");
+}
+
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////// DELETE request ////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+std::string Request::DELETERequest(Server& srv)
 {
 	parseFilename(srv);
 	if (this->_filename != "/index.html")
@@ -324,17 +352,18 @@ void Request::DELETERequest()
 		if (t.is_open())
 		{
 			t.close();
-			remove("." + this->_root + this->_path + this->_filename);
+			std::remove(("." + this->_root + this->_path + this->_filename).c_str());
 		}
 		else
-			this->_status = "HTTP/1.1 404 Not found\n";
+			return (errorPage("HTTP/1.1 404 Not found\n"));
 	}
+	return ("DELETE Request");
 }
 
 /*debug*/
 void Request::debug( void )
 {
-	size_t i = 0;
+	std::list<std::string>::iterator it;
 
 	std::cout << RED << "TYPE : " << RESET << this->getType() << std::endl;
 	std::cout << RED << "PATH : " << RESET << this->getPath() << std::endl;
@@ -342,16 +371,9 @@ void Request::debug( void )
 	std::cout << RED << "FILE NAME : " << RESET << this->getFilename() << std::endl;
 	std::cout << RED << "ROOT : " << RESET << this->getRoot() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;
-	while ( i < _accept.size())
-	{
-		std::cout << "   " << this->getAccept()[i] << std::endl;
-		i++;
-	}
+	for (it = this->_accept.begin(); it != this->_accept.end(); it++)
+		std::cout << "   " << (*it) << std::endl;
 	std::cout << RED << "BUFFER : " << RESET << std::endl;
-	i = 0;
-	while ( i < _buffer.size())
-	{
-		std::cout << "   " << this->getBuffer()[i] << std::endl;
-		i++;
-	}
+	for (it = this->_buffer.begin(); it != this->_buffer.end(); it++)
+		std::cout << "   " << (*it) << std::endl;
 }

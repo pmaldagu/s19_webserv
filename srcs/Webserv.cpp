@@ -210,7 +210,7 @@ bool Webserv::receiveRequest(std::list<class Client>::iterator it)
 	
 	/*link request to client*/
 	if (buffer[0] != 0)
-		(*it).setRequest(Request(buffer, getServer((*it).getFd())));
+		(*it).setRequest(Request(buffer, getServer((*it).getListen())));
 	else
 	{
 		close((*it).getFd());
@@ -263,6 +263,15 @@ void Webserv::launch( void )
 		max_sd = setFds();
 
 		/*select*/
+		// int                n = 0;
+    	// std::string        waitingPoint[3] = {".  ", ".. ", "..."};
+    	// while ((ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL)) <= 0)
+		// {
+        // 	std::cout << "\rWaiting on a connection " << waitingPoint[n++] << std::flush;
+        // 	if (n == 3)
+        //     	n = 0;
+        // 	sleep(1);
+    	// }
 		ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL);
 	
 		if (ret > 0)

@@ -10,6 +10,9 @@ Server::Server()
     this->_server_name = "";
     this->_redirection = "";
     this->_index = "";
+    this->_get_method = false;
+    this->_post_method = false;
+    this->_delete_method = false;
 
 	memset(&_address, 0, sizeof(_address));
 }
