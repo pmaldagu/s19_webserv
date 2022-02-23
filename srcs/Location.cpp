@@ -8,6 +8,7 @@ Location::Location()
     this->_upload_dir = "";
     this->_root = "";
     this->_redirection = "";
+    this->_autoindex = true;
     this->_get_method = false;
     this->_post_method = false;
     this->_delete_method = false;
@@ -33,6 +34,7 @@ Location& Location::operator=(Location const& copy)
         this->_post_method = copy._post_method;
         this->_delete_method = copy._delete_method;
         this->_redirection = copy._redirection;
+        this->_autoindex = copy._autoindex;
     }
     return (*this);
 }
@@ -82,6 +84,14 @@ void Location::setRedirection(std::string redirection)
     this->_redirection = redirection;
 }
 
+void Location::setAutoIndex(std::string autoindex)
+{
+    autoindex.erase(std::remove_if(autoindex.begin(), autoindex.end(), isspace), autoindex.end());
+    autoindex.erase(0, 9);
+    if (autoindex == "off")
+        this->_autoindex = false;
+}
+
 void Location::setGetMethod(bool b)
 {
     if (b == true)
@@ -128,6 +138,11 @@ std::string Location::getRoot() const
 std::string Location::getRedirection() const
 {
     return (this->_redirection);
+}
+
+bool Location::getAutoIndex() const
+{
+    return (this->_autoindex);
 }
 
 bool Location::getGetMethod() const

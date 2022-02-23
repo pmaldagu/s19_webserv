@@ -4,22 +4,6 @@
 /*reference*/
 //https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 
-/*liste de status utile*/
-//user agent ???
-// 200 OK => tt reussi--------------------------------------------------------------V
-// 201 => post a bien rajouter
-// 204 => no content----------------------------------------------------------------V
-// 300 => multiple choice (plein de ficher)-----------------------------------------X
-// 301 => move permently renvoi l'url dans le body
-// 400 => bad request mais tres peu probable
-// 403 => forbiden pas les droits (??? doute)
-// 404 => not found-----------------------------------------------------------------V
-// 405 => method not allow, methode pas accepter par la location
-// 431 => header trop large
-// 501 => not implemented, par exemple HEAD
-// 503 => service unavaible, si select crash (ou 500 Internal Server error ?)
-// 505 => http version not supported
-
 Request::Request( void )
 {
 	throw std::runtime_error("Request need buffer");
@@ -32,7 +16,7 @@ Request::Request(char* buffer, Server& srv)
 	parsePath();
 	parseHttpVersion();
 	parseLocation(srv);
-	parseFilename(srv);
+	parseFilename();
 	//debug();
 }
 
@@ -104,14 +88,15 @@ void Request::parsePath( void )
 	this->_path = this->_buffer.begin()->substr(ret + 1, this->_buffer.begin()->find(" ", ret + 1) - ret - 1);
 }
 
-void Request::parseLocation(Server& srv)
+void Request::parseLocation(Server& srv)         //////// Probleme : si filename = au nom d'une location -> server crash
 {
 	std::vector<class Location>::iterator	it = srv.getLocation().begin();
+	size_t									ret = 0;
 
 	this->_location = &(*it);
 	for (; it != srv.getLocation().end(); it++)
 	{
-		if (this->_path.find((*it).getPath()) != std::string::npos && (*it).getPath().size() != 1)
+		if (((ret = this->_path.find((*it).getPath())) != std::string::npos) && ((*it).getPath().size() != 1) /*&& (ret < this->_path.rfind("/"))*/)
 		{
 			this->_root = (*it).getRoot();
 			this->_path = this->_path.substr((*it).getPath().size(), this->_path.size() - 1);
@@ -123,22 +108,14 @@ void Request::parseLocation(Server& srv)
 		this->_root = srv.getRoot();
 }
 
-void Request::parseFilename(class Server& srv)
+void Request::parseFilename()
 {
 	size_t ret = 0;
 	if ((ret = this->_path.rfind(".")) != std::string::npos)
 	{
 		ret = this->_path.rfind("/");
 		this->_filename = this->_path.substr(ret, this->_path.size() - ret);
-		this->_path = this->_root.substr(0, ret);
-	}
-	else
-	{
-		////////// auto index
-		if (!this->_location->getIndex().empty())
-			this->_filename = "/" + this->_location->getIndex();
-		else
-			this->_filename = "/" + srv.getIndex();
+		this->_path = this->_path.substr(0, ret);
 	}
 }
 
@@ -229,6 +206,8 @@ std::string Request::respond(class Server& srv)
 {
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
+	else if (!this->_location->getRedirection().empty())
+		return ("HTTP/1.1 301 Moved Permanently\nLocation: " + this->_location->getRedirection() + "\n");
 	else if ((this->_type == "GET" && !this->_location->getGetMethod()) ||
 			(this->_type == "POST" && !this->_location->getPostMethod()) ||
 			(this->_type == "DELETE" && !this->_location->getDeleteMethod()))
@@ -238,7 +217,7 @@ std::string Request::respond(class Server& srv)
 	else if (this->_type == "POST")
 		return (POSTRequest(srv));
 	else if (this->_type == "DELETE")
-		return (DELETERequest(srv));
+		return (DELETERequest());
 	else
 		return (errorPage("HTTP/1.1 501 Not Implemented\n"));
 }
@@ -248,8 +227,15 @@ std::string Request::respond(class Server& srv)
 ///////////////////////////////////////////////////////////////////////////
 std::string Request::GETRequest(Server& srv)
 {
+	std::string response;
+
 	parseAccept();
-	return (GETResponse(srv));
+	//debug();
+	response = autoIndex();
+	if (response.empty())
+		response = GETResponse(srv);
+	debug();
+	return (response);
 }
 
 void Request::parseAccept( void )
@@ -330,10 +316,76 @@ std::string Request::contentType()
 	return (""); /////// type de contenu pas accepté /// faut changer quoi
 }
 
+std::string Request::autoIndex()
+{
+	std::string header = "<!DOCTYPE html>\n<html>\n <head>\n  <title>Index of [LOCATION]</title>\n </head>\n <body>\n<h1>Index of [LOCATION]</h1>\n";
+	std::string table = "  <table>\n   <tr><th valign=\"top\"><img src=\"/icons/blank.gif\" alt=\"[ICO]\"></th><th><a href=\"?C=N;O=D\">Name</a></th><th><a href=\"?C=M;O=A\">Last modified</a></th><th><a href=\"?C=S;O=A\">Size</a></th></tr>\n   <tr><th colspan=\"4\"><hr></th></tr>\n";
+	std::string autoindex;
+	size_t		ret = 0;
+
+	if (this->_path.empty() && this->_filename.empty() && !this->_location->getIndex().empty())
+	{
+		P(this->_path, "before path");
+		this->_filename = "/" + this->_location->getIndex();
+		return (autoindex);
+	}
+	else if (this->_filename.empty() && this->_location->getAutoIndex())
+	{
+    	DIR* dirp;
+		dirp = opendir(("." + this->_root + this->_path).c_str());
+    	if (dirp == NULL)
+		{
+        	return (errorPage("HTTP/1.1 404 Not Found\n"));
+		}
+		if (this->_path.empty())
+		{
+			while ((ret = header.find("[LOCATION]")) != std::string::npos)
+			{
+				header.erase(ret, 10);
+				header.insert(ret, this->_location->getPath());
+				autoindex = header;
+			}
+		}
+		// else     ///sub header
+		// {
+
+		// }
+		autoindex += table;
+		autoindex += directoryListing(dirp);
+		autoindex += "   <tr><th colspan=\"4\"><hr></th></tr>\n</table>\n<address>WebServ, created by pmaldagu, gverhelp, namenega</address>\n</body></html>";
+		return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-length: " + std::to_string(autoindex.size()) + "\n\n" + autoindex);
+	}
+	return (autoindex);
+}
+
+std::string Request::directoryListing(DIR* dirp)
+{
+	struct dirent* direntp;
+	std::string file = "<tr><td valign=\"top\"><img src=\"[ICON]\" alt=\"[DIR]\"></td><td><a href=\"[PATH]\">[NAME]</a></td><td align=\"right\">2021-10-21 23:18  </td><td align=\"right\">  - </td></tr>\n";
+	std::string buffer;
+	std::string listing;
+	size_t		ret = 0;
+
+	while ((direntp = readdir(dirp)) != NULL)
+	{
+		buffer = file;
+		ret = buffer.find("[PATH]");
+		buffer.erase(ret, 6);
+		buffer.insert(ret, direntp->d_name);
+		ret = buffer.find("[NAME]");
+		buffer.erase(ret, 6);
+		buffer.insert(ret, direntp->d_name);
+		ret = buffer.find("[ICON]");
+		buffer.erase(ret, 6);
+		buffer.insert(ret, "/icons/folder.gif");
+		listing += buffer;
+	}
+	return (listing);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //////////////////////////// POST request /////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-
 std::string Request::POSTRequest(Server& srv)
 {
 	(void)srv;
@@ -343,24 +395,20 @@ std::string Request::POSTRequest(Server& srv)
 ///////////////////////////////////////////////////////////////////////////
 /////////////////////////// DELETE request ////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-std::string Request::DELETERequest(Server& srv)
+std::string Request::DELETERequest()
 {
-	parseFilename(srv);
-	if (this->_filename != "/index.html")
-	{
-		std::ifstream t("." + this->_root + this->_path + this->_filename);
-		if (t.is_open())
-		{
-			t.close();
-			std::remove(("." + this->_root + this->_path + this->_filename).c_str());
-		}
-		else
-			return (errorPage("HTTP/1.1 404 Not found\n"));
-	}
-	return ("DELETE Request");
+	struct stat fileInfo;
+	stat(("." + this->_root + this->_path + this->_filename).c_str(), &fileInfo);
+	if (S_ISREG(fileInfo.st_mode))
+		std::remove(("." + this->_root + this->_path + this->_filename).c_str());
+	else
+		return ("HTTP/1.1 202 Accepted\n");
+	return ("HTTP/1.1 200 OK\n\n{\"success\":\"true\"}\n");
 }
 
-/*debug*/
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////// Debug ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Request::debug( void )
 {
 	std::list<std::string>::iterator it;

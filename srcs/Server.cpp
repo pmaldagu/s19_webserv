@@ -200,6 +200,8 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
             newLocation->setPath(*it);
         else if ((*it).find("root") != std::string::npos)
             newLocation->setRoot(*it);
+        else if ((*it).find("autoindex") != std::string::npos)
+            newLocation->setAutoIndex(*it);
         else if ((*it).find("index") != std::string::npos)
             newLocation->setIndex(*it);
         else if ((*it).find("error_page") != std::string::npos)
@@ -337,6 +339,7 @@ void Server::debug()
         std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
         std::cout << YELLOW << "      -Error page : " << RESET << this->getLocation()[a].getErrorPage() << std::endl;
         std::cout << YELLOW << "      -Upload Dir : " << RESET << this->getLocation()[a].getUploadDir() << std::endl;
+        std::cout << YELLOW << "      -Auto Index : " << RESET << this->getLocation()[a].getAutoIndex() << std::endl;
         std::cout << YELLOW << "      -Return : " << RESET << this->getLocation()[a].getRedirection() << std::endl;
         std::cout << YELLOW << "      -Get method : " << RESET << this->getLocation()[a].getGetMethod() << std::endl;
         std::cout << YELLOW << "      -Post method : " << RESET << this->getLocation()[a].getPostMethod() << std::endl;

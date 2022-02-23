@@ -53,7 +53,6 @@ Config& Config::operator=(Config const& copy)
 
 bool Config::checkServerLine(std::string line)
 {
-    //P(line, "line");
     line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
     if (line.find("server") != std::string::npos)
     {

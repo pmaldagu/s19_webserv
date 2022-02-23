@@ -19,7 +19,7 @@ class Request
 		void								parseType( void );
 		void								parsePath( void );
 		void								parseLocation(Server& srv);
-		void								parseFilename(class Server& srv);
+		void								parseFilename();
 
 		/*getter*/
 		std::list<std::string>				getBuffer( void ) const;
@@ -37,20 +37,22 @@ class Request
 		
 		/*check*/
 		std::string							checkBody(int fd);
-		std::vector<class CGI>::iterator		checkCGI(Server & server);
+		std::vector<class CGI>::iterator	checkCGI(Server & server);
 
 		/*GET request*/
 		std::string							GETRequest(Server& srv);
 		void								parseAccept( void );
 		std::string							GETResponse(class Server &srv);
 		std::string							contentType();
+		std::string							autoIndex();
+		std::string							directoryListing(DIR* dirp);
 		//std::string							createHeader(class Server& srv);
 
 		/*POST request*/
 		std::string							POSTRequest(Server& srv);
 
 		/*DELETE request*/
-		std::string							DELETERequest(Server& srv);
+		std::string							DELETERequest();
 
 		/*debug*/
 		void								debug( void );
