@@ -47,6 +47,9 @@ class Request
 		std::string							autoIndex();
 		std::string							directoryListing(DIR* dirp);
 		//std::string							createHeader(class Server& srv);
+		std::string							formatSize(std::string size);
+		std::string							formatLastMod(struct timespec* lastmod);
+		std::string							previousPage( void );
 
 		/*POST request*/
 		std::string							POSTRequest(Server& srv);
