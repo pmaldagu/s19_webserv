@@ -12,9 +12,9 @@ class Location
 
         Location&   operator=(Location const& copy);
 
+        /*Setters*/
         void        setIndex(std::string index);
         void        setPath(std::string path);
-        void        setErrorPage(std::string errorpage);
         void        setUploadDir(std::string uploaddir);
         void        setRoot(std::string root);
         void        setRedirection(std::string redirection);
@@ -23,9 +23,9 @@ class Location
         void        setPostMethod(bool b);
         void        setDeleteMethod(bool b);
 
+        /*Getters*/
         std::string getIndex() const;
         std::string getPath() const;
-        std::string getErrorPage() const;
         std::string getUploadDir() const;
         std::string getRoot() const;
         std::string getRedirection() const;
@@ -37,7 +37,6 @@ class Location
     private :
         std::string _index;
         std::string _path;
-        std::string _error_page;
         std::string _upload_dir;
         std::string _root;
         std::string _redirection;

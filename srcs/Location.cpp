@@ -4,7 +4,6 @@ Location::Location()
 {
     this->_index = "";
     this->_path = "";
-    this->_error_page = "";
     this->_upload_dir = "";
     this->_root = "";
     this->_redirection = "";
@@ -27,7 +26,6 @@ Location& Location::operator=(Location const& copy)
     {
         this->_index = copy._index;
         this->_path = copy._path;
-        this->_error_page = copy._error_page;
         this->_upload_dir = copy._upload_dir;
         this->_root = copy._root;
         this->_get_method = copy._get_method;
@@ -39,6 +37,9 @@ Location& Location::operator=(Location const& copy)
     return (*this);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Setters //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Location::setIndex(std::string index)
 {
     index.erase(std::remove_if(index.begin(), index.end(), isspace), index.end());
@@ -54,13 +55,6 @@ void Location::setPath(std::string path)
     path.erase(0, 8);
     path.erase(path.size() - 1);
     this->_path = path;
-}
-
-void Location::setErrorPage(std::string errorpage)
-{
-    errorpage.erase(std::remove_if(errorpage.begin(), errorpage.end(), isspace), errorpage.end());
-    errorpage.erase(0, 10);
-    this->_error_page = errorpage;
 }
 
 void Location::setUploadDir(std::string uploaddir)
@@ -110,6 +104,9 @@ void Location::setDeleteMethod(bool b)
         this->_delete_method = true;
 }
 
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Getters ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 std::string Location::getIndex() const
 {
     return (this->_index);
@@ -118,11 +115,6 @@ std::string Location::getIndex() const
 std::string Location::getPath() const
 {
     return (this->_path);
-}
-
-std::string Location::getErrorPage() const
-{
-    return (this->_error_page);
 }
 
 std::string Location::getUploadDir() const

@@ -13,8 +13,8 @@ Config::Config(char* path) : _serv_vector()
     while (getline(ifs, line))
         this->_data.push_back(line);
 
-    std::vector<std::string>::iterator  it_end = this->_data.end();
     std::vector<std::string>::iterator  it;
+    std::vector<std::string>::iterator  it_end = this->_data.end();
     for (it = this->_data.begin(); it != it_end; it++)
     {
         if ((a = (*it).find(";")) != std::string::npos)
@@ -51,6 +51,9 @@ Config& Config::operator=(Config const& copy)
     return (*this);
 }
 
+///////////////////////////////////////////////////////////////////////////
+////////////////////////////// Checking ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 bool Config::checkServerLine(std::string line)
 {
     line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
@@ -65,6 +68,9 @@ bool Config::checkServerLine(std::string line)
     return (true);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Setters //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Config::setServ()
 {
     std::vector<std::string>::iterator  it;
@@ -90,14 +96,10 @@ void Config::setServ()
                     newServ->setPort(*it);
                 else if ((*it).find("host") != std::string::npos)
                     newServ->setHost(*it);
-                else if ((*it).find("timeout") != std::string::npos)
-                    newServ->setTimeout(*it);
-                else if ((*it).find("return") != std::string::npos)
-                    newServ->setRedirection(*it);
                 else if ((*it).find("client_max_body_size") != std::string::npos)
                     newServ->setCmaxsize(*it);
-                else if ((*it).find("index") != std::string::npos)
-                    newServ->setIndex(*it);
+                else if ((*it).find("error_page") != std::string::npos)
+                    newServ->setErrorPage(*it);
                 else if ((*it).find("server_name") != std::string::npos)
                     newServ->setServername(*it);
                 else if ((*it).find("http_methods") != std::string::npos)
@@ -123,12 +125,16 @@ void Config::setServ()
                 newServ->setDeleteMethod(true);
             }
 			newServ->setSockaddr();
+            //newServ->checkSlashPath(*newServ);
             this->_serv_vector.push_back(*newServ);
             delete newServ;
         }
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Getters ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 std::vector<class  Server>& Config::getServ()
 {
     return (this->_serv_vector);

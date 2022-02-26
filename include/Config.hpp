@@ -12,10 +12,13 @@ class Config
 
         Config&                     operator=(Config const& copy);
 
+        /*Checking*/
         bool                        checkServerLine(std::string line);
 
+        /*Setters*/
         void                        setServ();
 
+        /*Getters*/
         std::vector<class Server>&  getServ();
 
     private :

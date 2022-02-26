@@ -326,7 +326,6 @@ std::string Request::autoIndex()//// bug avec index
 
 	if (this->_path.empty() && this->_filename.empty() && !this->_location->getIndex().empty())
 	{
-		P(this->_path, "before path");
 		this->_filename = "/" + this->_location->getIndex();
 		return (autoindex);
 	}

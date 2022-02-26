@@ -5,11 +5,10 @@ Server::Server()
     this->_root = "";
     this->_port = "";
     this->_host = "";
-    this->_timeout = "";
     this->_client_max_body_size = "";
     this->_server_name = "";
-    this->_redirection = "";
-    this->_index = "";
+    this->_error_page = "";
+    this->_slash_path = 0;
     this->_get_method = false;
     this->_post_method = false;
     this->_delete_method = false;
@@ -31,14 +30,13 @@ Server& Server::operator=(Server const& copy)
         this->_root = copy._root;
         this->_port = copy._port;
         this->_host = copy._host;
-        this->_timeout = copy._timeout;
         this->_client_max_body_size = copy._client_max_body_size;
         this->_server_name = copy._server_name;
-        this->_redirection = copy._redirection;
-        this->_index = copy._index;
+        this->_error_page = copy._error_page;
         this->_get_method = copy._get_method;
         this->_post_method = copy._post_method;
         this->_delete_method = copy._delete_method;
+        this->_slash_path = copy._slash_path;
         this->_cgi.clear();
         for (size_t a = 0; a < copy._cgi.size(); a++)
             this->_cgi.push_back(copy._cgi[a]);
@@ -53,9 +51,11 @@ Server& Server::operator=(Server const& copy)
     return (*this);
 }
 
+///////////////////////////////////////////////////////////////////////////
+////////////////////////////// Checking ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 bool Server::checkCGILine(std::string line)
 {
-    //P(line, "line");
     line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
     if (!line.empty())
         return (false);
@@ -64,14 +64,27 @@ bool Server::checkCGILine(std::string line)
 
 bool Server::checkLocationLine(std::string line)
 {
-    //P(line, "line");
     line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
     if (!line.empty())
         return (false);
     return (true);
 }
 
-/*setter*/
+void Server::checkSlashPath(Server& srv)
+{
+    std::vector<class Location>::iterator  it = srv.getLocation().begin();
+    for (; it != srv.getLocation().end(); it++)
+    {
+        if (it->getPath() == "/")
+            this->_slash_path++;
+    }
+    if (getSlashPath() != 1)
+        throw std::runtime_error("(.conf parsing Server): No one or too much '/' path in location");
+}
+
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Setters ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Server::setFd(int fd)
 {
 	this->_fd = fd;
@@ -103,13 +116,6 @@ void Server::setHost(std::string myhost)
     this->_host = myhost;
 }
 
-void Server::setTimeout(std::string mytimeout)
-{
-    mytimeout.erase(std::remove_if(mytimeout.begin(), mytimeout.end(), isspace), mytimeout.end());
-    mytimeout.erase(0, 7);
-    this->_timeout = mytimeout;
-}
-
 void Server::setCmaxsize(std::string myclientbodysize)
 {
     myclientbodysize.erase(std::remove_if(myclientbodysize.begin(), myclientbodysize.end(), isspace), myclientbodysize.end());
@@ -124,18 +130,11 @@ void Server::setServername(std::string servername)
     this->_server_name = servername;
 }
 
-void Server::setRedirection(std::string redirection)
+void Server::setErrorPage(std::string errorpage)
 {
-    redirection.erase(std::remove_if(redirection.begin(), redirection.end(), isspace), redirection.end());
-    redirection.erase(0, 6);
-    this->_redirection = redirection;
-}
-
-void Server::setIndex(std::string index)
-{
-    index.erase(std::remove_if(index.begin(), index.end(), isspace), index.end());
-    index.erase(0, 5);
-    this->_index = index;
+    errorpage.erase(std::remove_if(errorpage.begin(), errorpage.end(), isspace), errorpage.end());
+    errorpage.erase(0, 10);
+    this->_error_page = errorpage;
 }
 
 void Server::setGetMethod(bool b)
@@ -154,6 +153,16 @@ void Server::setDeleteMethod(bool b)
 {
     if (b == true)
         this->_delete_method = true;
+}
+
+void Server::setSockaddr()
+{
+	this->_address.sin_family = AF_INET;
+	if (this->_host.empty())
+		this->_address.sin_addr.s_addr = INADDR_ANY;
+	else
+		this->_address.sin_addr.s_addr = inet_addr(this->_host.c_str());
+	this->_address.sin_port = htons(std::stoul(this->_port, nullptr, 0));
 }
 
 std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator)
@@ -178,16 +187,6 @@ std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iter
     delete newCGI;
     return (it);
 }
-
-void Server::setSockaddr()
-{
-	this->_address.sin_family = AF_INET;
-	if (this->_host.empty())
-		this->_address.sin_addr.s_addr = INADDR_ANY;
-	else
-		this->_address.sin_addr.s_addr = inet_addr(this->_host.c_str());
-	this->_address.sin_port = htons(std::stoul(this->_port, nullptr, 0));
-}
 	
 std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>::iterator iterator)
 {
@@ -204,8 +203,6 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
             newLocation->setAutoIndex(*it);
         else if ((*it).find("index") != std::string::npos)
             newLocation->setIndex(*it);
-        else if ((*it).find("error_page") != std::string::npos)
-            newLocation->setErrorPage(*it);
         else if ((*it).find("upload_dir") != std::string::npos)
             newLocation->setUploadDir(*it);
         else if ((*it).find("return") != std::string::npos)
@@ -237,7 +234,9 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     return (it);
 }
 
-/*getter*/
+///////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Guetters //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 int Server::getFd() const
 {
 		return (this->_fd);
@@ -258,11 +257,6 @@ std::string Server::getHost() const
     return (this->_host);
 }
 
-std::string Server::getTimeout() const
-{
-    return (this->_timeout);
-}
-
 std::string Server::getCmaxsize() const
 {
     return (this->_client_max_body_size);
@@ -278,14 +272,14 @@ std::string Server::getServername() const
     return (this->_server_name);
 }
 
-std::string Server::getRedirection() const
+std::string Server::getErrorPage() const
 {
-    return (this->_redirection);
+    return (this->_error_page);
 }
 
-std::string Server::getIndex() const
+size_t Server::getSlashPath() const
 {
-    return (this->_index);
+    return (this->_slash_path);
 }
 
 bool Server::getGetMethod() const
@@ -313,31 +307,30 @@ struct sockaddr_in& Server::getSockaddr()
     return (this->_address);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////// debug ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 void Server::debug()
 {
-    ///// Print Server //////
+    ////////////// Print Server /////////////////
     std::cout << GREEN << "-> Server " << RESET << this << std::endl;
     std::cout << GREEN << "   -Root : " << RESET << this->getRoot() << std::endl;
     std::cout << GREEN << "   -Port : " << RESET << this->getPort() << std::endl;
     std::cout << GREEN << "   -Host : " << RESET << this->getHost() << std::endl;
-    std::cout << GREEN << "   -TimeOut : " << RESET << this->getTimeout() << std::endl;
-    std::cout << GREEN << "   -Index : " << RESET << this->getIndex() << std::endl;
+    std::cout << GREEN << "   -Error page : " << RESET << this->getErrorPage() << std::endl;
+    std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
+    std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;
     std::cout << GREEN << "   -Get method : " << RESET << this->getGetMethod() << std::endl;
     std::cout << GREEN << "   -Post method : " << RESET << this->getPostMethod() << std::endl;
     std::cout << GREEN << "   -Delete method : " << RESET << this->getDeleteMethod() << std::endl;
-    std::cout << GREEN << "   -Return : " << RESET << this->getRedirection() << std::endl;
-    std::cout << GREEN << "   -Size : " << RESET << this->getCmaxsize() << std::endl;
-    std::cout << GREEN << "   -Server name : " << RESET << this->getServername() << std::endl;
 
-
-    ///// Print Location //////
+    ////////////// Print Location //////////////
     for (size_t a = 0; a < this->getLocation().size(); a++)
     {
         std::cout << YELLOW << "   -> Location " << RESET << &this->getLocation()[a] << std::endl;
         std::cout << YELLOW << "      -Path : " << RESET << this->getLocation()[a].getPath() << std::endl;
         std::cout << YELLOW << "      -Root : " << RESET << this->getLocation()[a].getRoot() << std::endl;
         std::cout << YELLOW << "      -Index : " << RESET << this->getLocation()[a].getIndex() << std::endl;
-        std::cout << YELLOW << "      -Error page : " << RESET << this->getLocation()[a].getErrorPage() << std::endl;
         std::cout << YELLOW << "      -Upload Dir : " << RESET << this->getLocation()[a].getUploadDir() << std::endl;
         std::cout << YELLOW << "      -Auto Index : " << RESET << this->getLocation()[a].getAutoIndex() << std::endl;
         std::cout << YELLOW << "      -Return : " << RESET << this->getLocation()[a].getRedirection() << std::endl;
