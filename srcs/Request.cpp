@@ -17,7 +17,6 @@ Request::Request(char* buffer, Server& srv)
 	parseHttpVersion();
 	parseFilename();
 	parseLocation(srv);
-	//parseFilename();
 	//debug();
 }
 

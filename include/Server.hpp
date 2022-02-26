@@ -15,7 +15,7 @@ class Server
         /*Checking*/
         bool                                checkLocationLine(std::string line);
         bool                                checkCGILine(std::string line);
-        void                                checkSlashPath(Server& srv);
+        void                                checkPathLocation(Server& srv);
 
 				/*Setters*/
 				void																setFd(int fd);

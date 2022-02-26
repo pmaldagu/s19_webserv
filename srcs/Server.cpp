@@ -70,16 +70,26 @@ bool Server::checkLocationLine(std::string line)
     return (true);
 }
 
-void Server::checkSlashPath(Server& srv)
+void Server::checkPathLocation(Server& srv)
 {
     std::vector<class Location>::iterator  it = srv.getLocation().begin();
+    size_t b = 0;
     for (; it != srv.getLocation().end(); it++)
     {
         if (it->getPath() == "/")
             this->_slash_path++;
     }
-    if (getSlashPath() != 1)
-        throw std::runtime_error("(.conf parsing Server): No one or too much '/' path in location");
+    if (getSlashPath() == 0)
+        throw std::runtime_error("(.conf parsing Server): No '/' path in location");
+    for (size_t a = 0; a < srv.getLocation().size() - 1; a++)
+    {
+        b = a;
+        for (; b < srv.getLocation().size() - 1; b++)
+        {
+            if (srv.getLocation()[a].getPath() == srv.getLocation()[b + 1].getPath())
+                throw std::runtime_error("(.conf parsing Server): Several paths have the same name");
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
