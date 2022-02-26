@@ -125,7 +125,7 @@ void Config::setServ()
                 newServ->setDeleteMethod(true);
             }
 			newServ->setSockaddr();
-            //newServ->checkSlashPath(*newServ);
+            newServ->checkSlashPath(*newServ);
             this->_serv_vector.push_back(*newServ);
             delete newServ;
         }
