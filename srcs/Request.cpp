@@ -376,7 +376,10 @@ std::string Request::directoryListing(DIR* dirp)
 			buffer = file;
 			ret = buffer.find("[PATH]");
 			buffer.erase(ret, 6);
-			buffer.insert(ret, this->_location->getPath() + "/" + name);
+			if (this->_location->getPath() != "/")
+				buffer.insert(ret, this->_location->getPath() + "/" + name);
+			else
+				buffer.insert(ret, this->_location->getPath() + name);
 			ret = buffer.find("[NAME]");
 			buffer.erase(ret, 6);
 			buffer.insert(ret, direntp->d_name);
