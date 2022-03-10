@@ -37,7 +37,7 @@ class Server
         std::string                         getRoot() const;
         std::string                         getPort() const;
         std::string                         getHost() const;
-        std::string                         getCmaxsize() const;
+        size_t                              getCmaxsize() const;
         std::string                         getServername() const;
         std::string                         getErrorPage() const;
         size_t                              getSlashPath() const;
@@ -56,7 +56,7 @@ class Server
         std::string                         _root;
         std::string                         _port;
         std::string                         _host;
-        std::string                         _client_max_body_size;
+        size_t                              _client_max_body_size;
         std::string                         _server_name;
         std::string                         _error_page;
         bool                                _get_method;

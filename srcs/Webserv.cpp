@@ -212,6 +212,7 @@ bool Webserv::receiveRequest(std::list<class Client>::iterator it)
 	if((recv((*it).getFd(), buffer, 30000, 0)) < 0)
 		throw std::runtime_error("recv() failed");
 	
+	
 	/*link request to client*/
 	if (buffer[0] != 0)
 		(*it).setRequest(Request(buffer, getServer((*it).getListen())));

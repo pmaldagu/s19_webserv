@@ -54,9 +54,12 @@ void Request::splitBuffer(char* buffer)
 	std::string tmp(buffer);
 	size_t index = 0;
 	size_t ret = 0;
-
-	while((ret = tmp.find("\n", index)) != std::string::npos)
+ 
+	tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
+	while (index < tmp.size() - 1)
 	{
+		if ((ret = tmp.find("\n", index)) == std::string::npos)
+			ret = tmp.size() - 1;
 		this->_buffer.push_back(tmp.substr(index, ret - index));
 		index = ret + 1;
 	}
@@ -69,7 +72,7 @@ void Request::parseHttpVersion()
 
 	for (int i = 0; i < 2; i++)
 		ret = (*it).find(" ", ret + 1);
-	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 2);
+	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 1);
 }
 
 void Request::parseType( void )
@@ -119,6 +122,55 @@ void Request::parseFilename()
 	}
 }
 
+void Request::parseBody()
+{
+	std::list<std::string>::iterator	it = this->_buffer.begin();
+	bool								chunck = false;
+
+	debug();
+	for (; it != this->_buffer.end(); it++)
+	{
+		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
+		{
+			chunck = true;
+			break;
+		}
+	}
+	it = this->_buffer.begin();
+	while (it != this->_buffer.end() && (*it).size() != 0)
+		it++;
+	if (it != this->_buffer.end())
+		it++;
+	for (; it != this->_buffer.end(); it++)
+		this->_body.append((*it) + "\n");
+	if (chunck)
+		dechunk();  //https://fr.wikipedia.org/wiki/Chunked_transfer_encoding
+}
+
+void Request::dechunk()
+{
+	std::string buffer;
+	int y, i = 0;
+    std::stringstream stream;
+
+	while (this->_body[i])
+	{
+		for (; this->_body[i] && this->_body[i] != '\n'; i++)
+		{
+			stream << this->_body[i];
+			stream >> std::hex >> y;
+		}
+		if (y == 0)
+			break;
+		for (; this->_body[i] && i < y; i++)
+			buffer.push_back(this->_body[i]);
+		while (this->_body[i] && this->_body[i] != '\n')
+			i++;
+		i++;
+	}
+	this->_body = buffer;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Getters ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
@@ -162,6 +214,11 @@ bool Request::getBadStatus( void ) const
 	return (this->_bad_status);
 }
 
+std::string Request::getBody( void ) const
+{
+	return (this->_body);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// CGI /////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
@@ -186,7 +243,10 @@ std::string Request::errorPage(std::string str)
 {
 	size_t				ret = 0;
 	std::string			error;
-	std::ifstream		t("./www/error.html");
+	// if (srv.getErrorPage().empty())              //// default error_page
+		std::ifstream		t("./www/error.html");
+	// else
+	// 	std::ifstream 		t("root" + "/");
 	std::stringstream	buffer;
 	buffer << t.rdbuf();
 	error = buffer.str();
@@ -204,6 +264,7 @@ std::string Request::errorPage(std::string str)
 //	this->_status = "HTTP/1.1 301 Moved Permanently\n";
 std::string Request::respond(class Server& srv)
 {
+	debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
 	else if (!this->_location->getRedirection().empty())
@@ -379,7 +440,7 @@ std::string Request::directoryListing(DIR* dirp)
 			if (this->_location->getPath() != "/")
 				buffer.insert(ret, this->_location->getPath() + "/" + name);
 			else
-				buffer.insert(ret, this->_location->getPath() + name);
+			 	buffer.insert(ret, this->_location->getPath() + name);
 			ret = buffer.find("[NAME]");
 			buffer.erase(ret, 6);
 			buffer.insert(ret, direntp->d_name);
@@ -472,7 +533,42 @@ std::string Request::previousPage() ///bug avec default location
 std::string Request::POSTRequest(Server& srv)
 {
 	(void)srv;
-	return ("POST Request");
+	std::list<std::string>::iterator 	it = this->_buffer.begin();
+	size_t								size = 0;
+	std::stringstream ss;
+
+	for (; it != this->_buffer.end(); it++)
+	{
+		if ((*it).find("Content-Length: ") != std::string::npos)
+			break;
+	}
+	if (it != this->_buffer.end())
+	{
+		ss << (*it).substr(16, (*it).size() - 1);
+		ss >> size;
+	}
+	if (size > srv.getCmaxsize())
+		return ("HTTP/1.1 413 Request Entity Too Large\n");
+	parseBody();
+	P(this->_body, "this body");
+	return (postAppend());
+}
+
+std::string Request::postAppend()
+{
+    std::ofstream file_out;
+
+	if (!this->_filename.empty())
+	{
+		file_out.open("." + this->_location->getRoot() + this->_path + this->_filename, std::ios_base::app);
+		if (file_out.is_open())
+		{
+			file_out << this->_body;
+			file_out.close();
+			return ("HTTP/1.1 200 OK\n");
+		}
+	}
+	return ("HTTP/1.1 404 Not Found\n");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -502,6 +598,7 @@ void Request::debug( void )
 	std::cout << RED << "FILE NAME : " << RESET << this->getFilename() << std::endl;
 	std::cout << RED << "ROOT : " << RESET << this->getRoot() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;
+	std::cout << RED << "LOCATION : " << RESET << this->_location->getPath() << std::endl;
 	for (it = this->_accept.begin(); it != this->_accept.end(); it++)
 		std::cout << "   " << (*it) << std::endl;
 	std::cout << RED << "BUFFER : " << RESET << std::endl;

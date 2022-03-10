@@ -5,7 +5,7 @@ Server::Server()
     this->_root = "";
     this->_port = "";
     this->_host = "";
-    this->_client_max_body_size = "";
+    this->_client_max_body_size = 0;
     this->_server_name = "";
     this->_error_page = "";
     this->_slash_path = 0;
@@ -128,9 +128,25 @@ void Server::setHost(std::string myhost)
 
 void Server::setCmaxsize(std::string myclientbodysize)
 {
+    std::stringstream    ss;
+    size_t              num;
+    size_t              i = 0;
+
     myclientbodysize.erase(std::remove_if(myclientbodysize.begin(), myclientbodysize.end(), isspace), myclientbodysize.end());
     myclientbodysize.erase(0, 20);
-    this->_client_max_body_size = myclientbodysize;
+
+    for (; isdigit(myclientbodysize[i]) != 0; i++)
+        ss << myclientbodysize[i];
+    ss >> num;
+    if (myclientbodysize[i] == 'K')
+        num *= 1000;
+    else if (myclientbodysize[i] == 'M')
+        num *= 1000000;
+    else if (myclientbodysize[i] == 'G')
+        num *= 1000000000;
+    else if (myclientbodysize[i] == '\n')
+        throw std::runtime_error("Invalid max client body size.");
+    this->_client_max_body_size = num;
 }
 
 void Server::setServername(std::string servername)
@@ -267,7 +283,7 @@ std::string Server::getHost() const
     return (this->_host);
 }
 
-std::string Server::getCmaxsize() const
+size_t Server::getCmaxsize() const
 {
     return (this->_client_max_body_size);
 }

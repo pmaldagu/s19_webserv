@@ -20,6 +20,8 @@ class Request
 		void								parsePath( void );
 		void								parseLocation(Server& srv);
 		void								parseFilename();
+		void								parseBody( void );
+		void								dechunk( void ); 
 
 		/*getter*/
 		std::list<std::string>				getBuffer( void ) const;
@@ -29,6 +31,7 @@ class Request
 		std::string							getHttpver( void ) const;
 		std::string							getRoot( void ) const;
 		std::string							getFilename( void ) const;
+		std::string							getBody( void ) const;
 		bool								getBadStatus( void ) const;
 
 		/*respond*/
@@ -53,6 +56,7 @@ class Request
 
 		/*POST request*/
 		std::string							POSTRequest(Server& srv);
+		std::string							postAppend();
 
 		/*DELETE request*/
 		std::string							DELETERequest();
@@ -68,6 +72,7 @@ class Request
 		std::string				_httpver;
 		std::string				_filename;
 		std::string				_root;
+		std::string				_body;
 		bool					_bad_status;
 		Location*				_location;
 };
