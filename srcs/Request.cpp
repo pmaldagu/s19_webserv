@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
+/*   Updated: 2022/03/14 10:48:23 by namenega         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/lib.hpp"
 #include "fcntl.h" ///pour test, a virer
 
@@ -22,7 +34,7 @@ Request::Request(char* buffer, Server& srv)
 
 Request::Request(Request const& copy)
 {
-    *this = copy;
+	*this = copy;
 }
 
 Request::~Request()
@@ -31,19 +43,19 @@ Request::~Request()
 
 Request& Request::operator=(Request const& copy)
 {
-    if (this != &copy)
-    {
+	if (this != &copy)
+	{
 		this->_buffer = copy._buffer;
 		this->_type = copy._type;
-    	this->_path = copy._path;
-    	this->_accept = copy._accept;
+		this->_path = copy._path;
+		this->_accept = copy._accept;
 		this->_filename = copy._filename;
 		this->_httpver = copy._httpver;
 		this->_root = copy._root;
 		this->_bad_status = copy._bad_status;
 		this->_location = copy._location;
-    }
-    return (*this);
+	}
+	return (*this);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -91,7 +103,7 @@ void Request::parsePath( void )
 	this->_path = this->_buffer.begin()->substr(ret + 1, this->_buffer.begin()->find(" ", ret + 1) - ret - 1);
 }
 
-void Request::parseLocation(Server& srv)         //////// Probleme : si filename = au nom d'une location -> server crash
+void Request::parseLocation(Server& srv)		 //////// Probleme : si filename = au nom d'une location -> server crash
 {
 	std::vector<class Location>::iterator	it = srv.getLocation().begin();
 	size_t									ret = 0;
@@ -151,7 +163,7 @@ void Request::dechunk()
 {
 	std::string buffer;
 	int y, i = 0;
-    std::stringstream stream;
+	std::stringstream stream;
 
 	while (this->_body[i])
 	{
@@ -243,7 +255,7 @@ std::string Request::errorPage(std::string str)
 {
 	size_t				ret = 0;
 	std::string			error;
-	// if (srv.getErrorPage().empty())              //// default error_page
+	// if (srv.getErrorPage().empty())			  //// default error_page
 		std::ifstream		t("./www/error.html");
 	// else
 	// 	std::ifstream 		t("root" + "/");
@@ -391,11 +403,11 @@ std::string Request::autoIndex()//// bug avec index
 	}
 	else if (this->_filename.empty() && this->_location->getAutoIndex())
 	{
-    	DIR* dirp;
+		DIR* dirp;
 		dirp = opendir(("." + this->_root + this->_path).c_str());
-    	if (dirp == NULL)
+		if (dirp == NULL)
 		{
-        	return (errorPage("HTTP/1.1 404 Not Found\n"));
+			return (errorPage("HTTP/1.1 404 Not Found\n"));
 		}
 		if (this->_path.empty())
 		{
@@ -406,7 +418,7 @@ std::string Request::autoIndex()//// bug avec index
 				autoindex = header;
 			}
 		}
-		// else     ///sub header
+		// else	 ///sub header
 		// {
 
 		// }
@@ -455,7 +467,7 @@ std::string Request::directoryListing(DIR* dirp)
 				buffer.insert(ret, "/icons/unknown.gif");
 			ret = buffer.find("[LASTMOD]");
 			buffer.erase(ret, 9);
-			buffer.insert(ret, formatLastMod(&info.st_mtim));	
+			buffer.insert(ret, formatLastMod(&info.st_mtimespec));	
 			ret = buffer.find("[SIZE]");
 			buffer.erase(ret, 6);
 			if (!S_ISREG(info.st_mode))
@@ -556,7 +568,7 @@ std::string Request::POSTRequest(Server& srv)
 
 std::string Request::postAppend()
 {
-    std::ofstream file_out;
+	std::ofstream file_out;
 
 	if (!this->_filename.empty())
 	{
