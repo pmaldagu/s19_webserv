@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/03/14 10:48:23 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/21 15:00:17 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -425,6 +425,7 @@ std::string Request::autoIndex()//// bug avec index
 		autoindex += table;
 		autoindex += directoryListing(dirp);
 		autoindex += "   <tr><th colspan=\"4\"><hr></th></tr>\n</table>\n<address>WebServ, created by pmaldagu, gverhelp, namenega</address>\n</body></html>";
+		closedir(dirp);
 		return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-length: " + std::to_string(autoindex.size()) + "\n\n" + autoindex);
 	}
 	return (autoindex);

@@ -53,7 +53,8 @@ void Location::setPath(std::string path)
     if ((path.find("location/") == std::string::npos) || (path[path.size() - 1] != '{'))
         throw std::runtime_error("(.conf parsing Location): path parsing failed.");
     path.erase(0, 8);
-    path.erase(path.size() - 1);
+		if (path.size() > 1)
+    	path.erase(path.size() - 1);
     this->_path = path;
 }
 
