@@ -31,7 +31,7 @@ class Webserv
 		int									setFds( void );
 		void								acceptConnection(std::list<class Server>::iterator it, std::string set);
 		char*								chunckMaster(char *ptr);
-		bool								receiveRequest(std::list<class Client>::iterator it);
+		std::list<class Client>::iterator	receiveRequest(std::list<class Client>::iterator it);
 		std::list<class Client>::iterator	sendResponse(std::list<class Client>::iterator it);
 
 	private:

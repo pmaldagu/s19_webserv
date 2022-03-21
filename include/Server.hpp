@@ -15,7 +15,6 @@ class Server
         /*Checking*/
         bool                                checkLocationLine(std::string line);
         bool                                checkCGILine(std::string line);
-        void                                checkPathLocation(Server& srv);
 
 				/*Setters*/
 				void																setFd(int fd);
@@ -65,7 +64,6 @@ class Server
         std::vector<class Location>         _location_vector;
         std::vector<class CGI>              _cgi;
         struct sockaddr_in                  _address;
-        size_t                              _slash_path;
 };
 
 #endif

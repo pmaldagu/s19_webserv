@@ -27,7 +27,7 @@ Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 	try
 	{
 		createSocket();
-		setNonblocking();
+		//setNonblocking();
 		bindSocket();
 		setListen();
 		serverName();
@@ -161,22 +161,23 @@ int Webserv::setFds( void )
 
 	/*add master sockets*/
 	std::list<class Server>::iterator srv = _servers.begin();	
-	for	( ; srv != _servers.end(); srv++)
+	for	(; srv != _servers.end(); srv++)
 	{
 		FD_SET((*srv).getFd(), &readfds);
-		FD_SET((*srv).getFd(), &writefds);
+		//FD_SET((*srv).getFd(), &writefds);
 		if ((*srv).getFd() > max_sd)
 			max_sd = (*srv).getFd();
 	}
 
 	/*add client socket*/
 	std::list<class Client>::iterator clt = _clients.begin();	
-	for ( ; clt != _clients.end(); clt++)
+	for (; clt != _clients.end(); clt++)
 	{	
 		if ((*clt).getFd() > 0)
 		{
 			FD_SET((*clt).getFd(), &readfds);
-			FD_SET((*clt).getFd(), &writefds);
+			if ((*clt).isReady())
+				FD_SET((*clt).getFd(), &writefds);
 			if ((*clt).getFd() > max_sd)
 				max_sd = (*clt).getFd();
 		}
@@ -220,25 +221,28 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 	std::cout << YELLOW << "     -Ip : " << RESET << inet_ntoa((*it).getSockaddr().sin_addr) << std::endl;
 }
 
-bool Webserv::receiveRequest(std::list<class Client>::iterator it)
+std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
-	char buffer[30001]; // change 3000 par max body size ?;
+	int		ret;
+	char	buffer[30001]; // change 3000 par max body size ?;
 
 	/*receive*/
 	memset(buffer, 0, 30001);
-	if((recv((*it).getFd(), buffer, 30000, 0)) < 0)
-		throw std::runtime_error("recv() failed");
-	
-	
-	/*link request to client*/
-	if (buffer[0] != 0)
-		(*it).setRequest(Request(buffer, getServer((*it).getListen())));
-	else
+	ret = recv((*it).getFd(), buffer, 30000, 0);
+
+	/*Check error*/
+	if (ret == 0)
 	{
 		close((*it).getFd());
-		_clients.erase(it);
-		return (false);
+		return (_clients.erase(it));
 	}
+	if (ret == -1)
+		return (_clients.erase(it));
+	P("receive", "receive");
+
+	/*link request to client*/
+	(*it).setRequest(Request(buffer, getServer((*it).getListen())));
+
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
 	std::cout << YELLOW << "=> READ" << RESET << std::endl;
@@ -246,18 +250,26 @@ bool Webserv::receiveRequest(std::list<class Client>::iterator it)
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
 	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer;
-	return (true);
+	return (it);
 }
 
 std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>::iterator it)
 {
-	/*debug*/
-	//std::string buffer = "HTTP/1.1 200 OK\nContent-type: text/plain\nContent-Length: 12\n\nHello world!";
+	int	ret;
+
 	/*send*/
 	std::string buffer = (*it).getRequest().respond(getServer((*it).getListen()));
-	if ((send((*it).getFd(), buffer.c_str(), buffer.size(), 0)) <= 0)
-	//if((send((*it).getFd(), greets.c_str(), greets.size(), 0)) <= 0)//TODO send request
-		throw std::runtime_error("send() failed");
+	ret = send((*it).getFd(), buffer.c_str(), buffer.size(), 0);
+
+	/*Check error*/
+	if (ret == 0)
+	{
+		close((*it).getFd());
+		return (_clients.erase(it));
+	}
+	if (ret == -1)
+		return (_clients.erase(it));
+	P("send", "send");
 
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
@@ -275,62 +287,65 @@ std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>:
 
 void Webserv::launch( void )
 {
-	int ret = -1;
+	int ret = 0;
 	int max_sd;
 
 	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)
 	{
+		/*select*/
+		std::cout << GREEN << "------------ DEBUT SELECT ------------" << RESET << std::endl;
+
 		/*set fd*/
 		max_sd = setFds();
-
-		/*select*/
-		// int                n = 0;
-    	// std::string        waitingPoint[3] = {".  ", ".. ", "..."};
-    	// while ((ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL)) <= 0)
-		// {
-        // 	std::cout << "\rWaiting on a connection " << waitingPoint[n++] << std::flush;
-        // 	if (n == 3)
-        //     	n = 0;
-        // 	sleep(1);
-    	// }
-		ret = select(max_sd + 1, &readfds, &writefds, NULL, NULL);
-	
+		ret = select(max_sd + 1, &readfds, &writefds, NULL,  NULL);
 		if (ret > 0)
 		{	
 			/*check client side*/
 			std::list<class Client>::iterator clt = _clients.begin();
 			for ( ; clt != _clients.end(); clt++)
 			{
-				/*set as read*/
-				if (FD_ISSET((*clt).getFd(), &readfds))
-				{
-					if (!receiveRequest(clt))
-						break ;
-				}
 				/*set as write*/
 				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
 				{
+					P((*clt).getFd(), "write fd");
 					clt = sendResponse(clt);
-					//break; //TODO A ENLEVER ET RECUP IT DE SENDRESPONSE
+				}
+			}
+
+			clt = _clients.begin();
+			for ( ; clt != _clients.end(); clt++)
+			{
+				/*set as read*/
+				if (FD_ISSET((*clt).getFd(), &readfds))
+				{
+					P((*clt).getFd(), "read fd");
+					clt = receiveRequest(clt);
 				}
 			}
 
 			/*check master side*/
 			std::list<class Server>::iterator srv = _servers.begin();
-			for ( ; srv != _servers.end(); srv++)
+			for (; srv != _servers.end(); srv++)
 			{
 				/*set as read*/
 				if (FD_ISSET((*srv).getFd(), &readfds))
+				{
+					P((*srv).getFd(), "srv read fd");
 					acceptConnection(srv, "READ");
+				}
 			}
-			//std::cout << GREEN << "\n------------END LOOP-----------\n" << RESET << std::endl;
-			//usleep(200);
 		}
 		else
 		{
-			/*TODO relance the multiplexer*/
-			throw std::runtime_error("select() failed");
+			/*relance the multiplexer*/
+			std::list<class Client>::iterator clt = _clients.begin();
+			for (; clt != _clients.end(); clt++)
+			{
+				close((*clt).getFd());
+			}
+			_clients.clear();
+			throw std::runtime_error("select() failed"); // à enlever
 		}
 	}
 }

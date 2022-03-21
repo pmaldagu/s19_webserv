@@ -14,6 +14,8 @@ class Config
 
         /*Checking*/
         bool                        checkServerLine(std::string line);
+        void                        checkPort();
+        void                        checkPathLocation();
 
         /*Setters*/
         void                        setServ();

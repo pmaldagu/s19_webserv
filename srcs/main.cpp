@@ -10,23 +10,22 @@ int main(int argc, char **argv)
     }
     try
     {
-        Config *file = new Config(argv[1]);
+        Config file(argv[1]);
 
-        file->setServ();
+        file.setServ();
         //////////////// Print my data /////////////////
-        for (size_t a = 0; a < file->getServ().size(); a++)
-            file->getServ()[a].debug();
+        for (size_t a = 0; a < file.getServ().size(); a++)
+            file.getServ()[a].debug();
         ////////////////////////////////////////////////
 
-        Webserv web(file->getServ());
+        Webserv web(file.getServ());
 
         web.launch();
     }
     catch (std::exception &e)
     {
-				std::cout << RED << "ERROR: " << RESET << e.what() << std::endl;
+		std::cout << RED << "ERROR: " << RESET << e.what() << std::endl;
 //        web.close();
-//        delete file;
     }
     return (0);
 }

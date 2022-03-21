@@ -2,29 +2,5 @@
 2. Chunks (fait mais à tester)
 3. auto_index (fait mais bugé)
 4. default page
-5. CGI
-6. Rebounce
-
-///////////////////////////////////////////////////
-
-1. Récupérer buffer
-2. Parse le type
-3. Parse le path complet
-4. Parse le httver
-5. Trouver le location
-6. Parse filename
-
-----> GETRequest()
-        1. Parse accept
-        2. Regarder si l'extension est acceptée
-        3. Récupérer body du cgi ou location
-        4. Créer le header si body existe
-
-----> POSTRequest()
-
-----> DELETERequest()
-        1. Regarder si le fichier existe
-        2. Supprimer le fichier s'il existe
-        3. Créer header si réussi
-
-///////////////////////////////////////////////////
+5. auto_index location /
+6. Enlever errno et throw inutile

@@ -8,7 +8,6 @@ Server::Server()
     this->_client_max_body_size = 0;
     this->_server_name = "";
     this->_error_page = "";
-    this->_slash_path = 0;
     this->_get_method = false;
     this->_post_method = false;
     this->_delete_method = false;
@@ -36,7 +35,6 @@ Server& Server::operator=(Server const& copy)
         this->_get_method = copy._get_method;
         this->_post_method = copy._post_method;
         this->_delete_method = copy._delete_method;
-        this->_slash_path = copy._slash_path;
         this->_cgi.clear();
         for (size_t a = 0; a < copy._cgi.size(); a++)
             this->_cgi.push_back(copy._cgi[a]);
@@ -70,28 +68,6 @@ bool Server::checkLocationLine(std::string line)
     return (true);
 }
 
-void Server::checkPathLocation(Server& srv)
-{
-    std::vector<class Location>::iterator  it = srv.getLocation().begin();
-    size_t b = 0;
-    for (; it != srv.getLocation().end(); it++)
-    {
-        if (it->getPath() == "/")
-            this->_slash_path++;
-    }
-    if (getSlashPath() == 0)
-        throw std::runtime_error("(.conf parsing Server): No '/' path in location");
-    for (size_t a = 0; a < srv.getLocation().size() - 1; a++)
-    {
-        b = a;
-        for (; b < srv.getLocation().size() - 1; b++)
-        {
-            if (srv.getLocation()[a].getPath() == srv.getLocation()[b + 1].getPath())
-                throw std::runtime_error("(.conf parsing Server): Several paths have the same name");
-        }
-    }
-}
-
 ///////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Setters ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
@@ -111,7 +87,7 @@ void Server::setPort(std::string myport)
 {
     myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
     myport.erase(0, 6);
-    if (myport.size() > 4)
+    if (myport.size() != 4)
     {
         std::cerr << "Error : The port is not valid.\n";
         throw std::exception();
@@ -301,11 +277,6 @@ std::string Server::getServername() const
 std::string Server::getErrorPage() const
 {
     return (this->_error_page);
-}
-
-size_t Server::getSlashPath() const
-{
-    return (this->_slash_path);
 }
 
 bool Server::getGetMethod() const

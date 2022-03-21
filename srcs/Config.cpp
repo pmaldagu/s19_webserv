@@ -1,6 +1,9 @@
 #include "../include/lib.hpp"
 
-Config::Config() {}
+Config::Config()
+{
+
+}
 
 Config::Config(char* path) : _serv_vector()
 {
@@ -68,6 +71,49 @@ bool Config::checkServerLine(std::string line)
     return (true);
 }
 
+void Config::checkPort()
+{
+    size_t b = 0;
+
+    for (size_t a = 0; a < this->_serv_vector.size(); a++)
+    {
+        b = a + 1;
+        for (; b < this->_serv_vector.size(); b++)
+        {
+            if (this->_serv_vector[a].getPort() == this->_serv_vector[b].getPort() && this->_serv_vector[a].getHost() == this->_serv_vector[b].getHost())
+                throw std::runtime_error("(.conf parsing Config): Several ports have the same name");
+        }
+    }
+}
+
+void Config::checkPathLocation()
+{
+    std::vector<class Server>::iterator it_serv = _serv_vector.begin();
+    bool                                slashpath = false;
+
+    for (; it_serv != _serv_vector.end(); it_serv++)
+    {
+        std::vector<class Location>::iterator  it = (*it_serv).getLocation().begin();
+        size_t b = 0;
+        for (; it != (*it_serv).getLocation().end(); it++)
+        {
+            if (it->getPath() == "/")
+                slashpath = true;
+        }
+        if (!slashpath)
+            throw std::runtime_error("(.conf parsing Server): No '/' path in location");
+        for (size_t a = 0; a < (*it_serv).getLocation().size(); a++)
+        {
+            b = a + 1;
+            for (; b < (*it_serv).getLocation().size(); b++)
+            {
+                if ((*it_serv).getLocation()[a].getPath() == (*it_serv).getLocation()[b].getPath())
+                    throw std::runtime_error("(.conf parsing Server): Several paths have the same name");
+            }
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //////////////////////////////// Setters //////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
@@ -125,11 +171,12 @@ void Config::setServ()
                 newServ->setDeleteMethod(true);
             }
 			newServ->setSockaddr();
-            newServ->checkPathLocation(*newServ);
             this->_serv_vector.push_back(*newServ);
             delete newServ;
         }
     }
+    checkPathLocation();
+    checkPort();
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/03/21 15:00:17 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/03/14 10:48:23 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -594,7 +594,7 @@ std::string Request::DELETERequest()
 	if (S_ISREG(fileInfo.st_mode))
 		std::remove(("." + this->_root + this->_path + this->_filename).c_str());
 	else
-		return ("HTTP/1.1 202 Accepted\n");
+		return ("HTTP/1.1 202 Accepted\n"); 			/// maybe 404
 	return ("HTTP/1.1 200 OK\n\n{\"success\":\"true\"}\n");
 }
 
