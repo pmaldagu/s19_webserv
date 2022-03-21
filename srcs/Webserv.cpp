@@ -27,10 +27,9 @@ Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 	try
 	{
 		createSocket();
-		//setNonblocking();
+		setNonblocking();
 		bindSocket();
 		setListen();
-		serverName();
 	}
 	catch(std::exception & e)
 	{
@@ -105,7 +104,7 @@ void Webserv::setNonblocking( void )
 	for ( ; it != _servers.end(); it++)
 	{
 		int mem = 1;
-		if ((ioctl((*it).getFd() , FIONBIO, (char *)&mem)) < 0) //&ON A VERIF!!!!!!
+		if ((ioctl((*it).getFd() , FIONBIO, (char *)&mem)) < 0)
 			throw std::runtime_error("ioctl() failed");
 	}
 }
@@ -131,24 +130,9 @@ void Webserv::setListen( void )
 
 	for ( ; it != _servers.end(); it++)
 	{
-		if ((listen((*it).getFd(), 32)) < 0) //32 pending connection maybe too much ??
+		if ((listen((*it).getFd(), 32)) < 0)
 			throw std::runtime_error("listen() failed");
 	}
-}
-
-void Webserv::serverName( void )
-{
-	// std::list<class Server>::iterator it = _servers.begin();
-
-	// for ( ; it != _servers.end(); it++)
-	// {
-	// 	if (!(*it).getServername().empty())
-	// 	{
-	// 		if (sethostname((*it).getServername().c_str(), (*it).getServername().size()) < 0)
-	// 			throw std::runtime_error("sethostname");
-	// 		P((*it).getServername(), "servername");
-	// 	}
-	// }
 }
 
 int Webserv::setFds( void )
@@ -164,7 +148,6 @@ int Webserv::setFds( void )
 	for	(; srv != _servers.end(); srv++)
 	{
 		FD_SET((*srv).getFd(), &readfds);
-		//FD_SET((*srv).getFd(), &writefds);
 		if ((*srv).getFd() > max_sd)
 			max_sd = (*srv).getFd();
 	}
@@ -238,7 +221,6 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 	}
 	if (ret == -1)
 		return (_clients.erase(it));
-	P("receive", "receive");
 
 	/*link request to client*/
 	(*it).setRequest(Request(buffer, getServer((*it).getListen())));
@@ -269,7 +251,6 @@ std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>:
 	}
 	if (ret == -1)
 		return (_clients.erase(it));
-	P("send", "send");
 
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
@@ -307,10 +288,7 @@ void Webserv::launch( void )
 			{
 				/*set as write*/
 				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
-				{
-					P((*clt).getFd(), "write fd");
 					clt = sendResponse(clt);
-				}
 			}
 
 			clt = _clients.begin();
@@ -318,10 +296,7 @@ void Webserv::launch( void )
 			{
 				/*set as read*/
 				if (FD_ISSET((*clt).getFd(), &readfds))
-				{
-					P((*clt).getFd(), "read fd");
 					clt = receiveRequest(clt);
-				}
 			}
 
 			/*check master side*/
@@ -330,10 +305,7 @@ void Webserv::launch( void )
 			{
 				/*set as read*/
 				if (FD_ISSET((*srv).getFd(), &readfds))
-				{
-					P((*srv).getFd(), "srv read fd");
 					acceptConnection(srv, "READ");
-				}
 			}
 		}
 		else
@@ -341,9 +313,7 @@ void Webserv::launch( void )
 			/*relance the multiplexer*/
 			std::list<class Client>::iterator clt = _clients.begin();
 			for (; clt != _clients.end(); clt++)
-			{
 				close((*clt).getFd());
-			}
 			_clients.clear();
 			throw std::runtime_error("select() failed"); // à enlever
 		}
