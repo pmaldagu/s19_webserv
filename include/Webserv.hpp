@@ -27,6 +27,7 @@ class Webserv
 		
 		/*Multiplexer*/
 		void								launch( void );
+		void								serverName( void );
 		int									setFds( void );
 		void								acceptConnection(std::list<class Server>::iterator it, std::string set);
 		char*								chunckMaster(char *ptr);

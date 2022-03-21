@@ -30,6 +30,7 @@ Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 		setNonblocking();
 		bindSocket();
 		setListen();
+		serverName();
 	}
 	catch(std::exception & e)
 	{
@@ -38,7 +39,7 @@ Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
 	}
 }
 
-Webserv::Webserv( Webserv const& copy )
+Webserv::Webserv(Webserv const& copy)
 {
 	*this = copy;
 }
@@ -116,7 +117,8 @@ void Webserv::bindSocket( void )
 	for ( ; it != _servers.end(); it++)
 	{
 		if ((bind((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), 
-				sizeof(struct sockaddr_in))) < 0) {
+				sizeof(struct sockaddr_in))) < 0)
+		{
 			std::cout << BLUE << "BIND ERR : " << std::strerror(errno) << RESET << std::endl;
 			throw std::runtime_error("bind() failed : " + std::to_string((*it).getFd()));
 		}
@@ -132,6 +134,21 @@ void Webserv::setListen( void )
 		if ((listen((*it).getFd(), 32)) < 0) //32 pending connection maybe too much ??
 			throw std::runtime_error("listen() failed");
 	}
+}
+
+void Webserv::serverName( void )
+{
+	// std::list<class Server>::iterator it = _servers.begin();
+
+	// for ( ; it != _servers.end(); it++)
+	// {
+	// 	if (!(*it).getServername().empty())
+	// 	{
+	// 		if (sethostname((*it).getServername().c_str(), (*it).getServername().size()) < 0)
+	// 			throw std::runtime_error("sethostname");
+	// 		P((*it).getServername(), "servername");
+	// 	}
+	// }
 }
 
 int Webserv::setFds( void )

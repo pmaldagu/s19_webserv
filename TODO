@@ -1,11 +1,9 @@
-1. POST (append fait)
-2. upload_dir
-3. Chunks (fait mais à tester)
-4. auto_index (fait mais bugé)
+1. POST : upload_dir
+2. Chunks (fait mais à tester)
+3. auto_index (fait mais bugé)
+4. default page
 5. CGI
 6. Rebounce
-7. server_name
-8. default page
 
 ///////////////////////////////////////////////////
 
