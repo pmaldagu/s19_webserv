@@ -119,7 +119,7 @@ void Webserv::bindSocket( void )
 				sizeof(struct sockaddr_in))) < 0)
 		{
 			std::cout << BLUE << "BIND ERR : " << std::strerror(errno) << RESET << std::endl;
-			throw std::runtime_error("bind() failed : " + std::to_string((*it).getFd()));
+			throw std::runtime_error("bind() failed");
 		}
 	}
 }
@@ -223,7 +223,7 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 		return (_clients.erase(it));
 
 	/*link request to client*/
-	(*it).setRequest(Request(buffer, getServer((*it).getListen())));
+	(*it).setRequest(buffer, getServer((*it).getListen()));
 
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
@@ -284,7 +284,7 @@ void Webserv::launch( void )
 		{	
 			/*check client side*/
 			std::list<class Client>::iterator clt = _clients.begin();
-			for ( ; clt != _clients.end(); clt++)
+			for (; clt != _clients.end(); clt++)
 			{
 				/*set as write*/
 				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
@@ -292,7 +292,7 @@ void Webserv::launch( void )
 			}
 
 			clt = _clients.begin();
-			for ( ; clt != _clients.end(); clt++)
+			for (; clt != _clients.end(); clt++)
 			{
 				/*set as read*/
 				if (FD_ISSET((*clt).getFd(), &readfds))

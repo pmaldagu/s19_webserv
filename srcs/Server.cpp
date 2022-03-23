@@ -164,7 +164,7 @@ void Server::setSockaddr()
 		this->_address.sin_addr.s_addr = INADDR_ANY;
 	else
 		this->_address.sin_addr.s_addr = inet_addr(this->_host.c_str());
-	this->_address.sin_port = htons(std::stoul(this->_port, nullptr, 0));
+	this->_address.sin_port = htons(atoi(this->_port.c_str()));
 }
 
 std::vector<std::string>::iterator Server::setCGI(std::vector<std::string>::iterator iterator)

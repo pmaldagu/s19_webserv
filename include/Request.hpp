@@ -32,7 +32,6 @@ class Request
 		std::string							getRoot( void ) const;
 		std::string							getFilename( void ) const;
 		std::string							getBody( void ) const;
-		bool								getBadStatus( void ) const;
 
 		/*respond*/
 		std::string							errorPage(std::string str);
@@ -73,7 +72,7 @@ class Request
 		std::string				_filename;
 		std::string				_root;
 		std::string				_body;
-		bool					_bad_status;
+		std::string				_errorpage;
 		Location*				_location;
 };
 

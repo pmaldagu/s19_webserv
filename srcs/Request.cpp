@@ -23,6 +23,10 @@ Request::Request( void )
 
 Request::Request(char* buffer, Server& srv)
 {
+	if (srv.getErrorPage().empty())
+		this->_errorpage = "./www/error.html";
+	else
+		this->_errorpage = "." + srv.getErrorPage();
 	splitBuffer(buffer);
 	parseType();
 	parsePath();
@@ -52,8 +56,9 @@ Request& Request::operator=(Request const& copy)
 		this->_filename = copy._filename;
 		this->_httpver = copy._httpver;
 		this->_root = copy._root;
-		this->_bad_status = copy._bad_status;
+		this->_body = copy._body;
 		this->_location = copy._location;
+		this->_errorpage = copy._errorpage;
 	}
 	return (*this);
 }
@@ -221,11 +226,6 @@ std::string Request::getFilename( void ) const
 	return (this->_filename);
 }
 
-bool Request::getBadStatus( void ) const
-{
-	return (this->_bad_status);
-}
-
 std::string Request::getBody( void ) const
 {
 	return (this->_body);
@@ -256,11 +256,14 @@ std::string Request::errorPage(std::string str)
 	size_t				ret = 0;
 	std::string			error;
 	// if (srv.getErrorPage().empty())			  //// default error_page
-		std::ifstream		t("./www/error.html");
+	std::ifstream		t(this->_errorpage.c_str());
+	if (!t.is_open())
+		t.open("./www/error.html");
 	// else
 	// 	std::ifstream 		t("root" + "/");
 	std::stringstream	buffer;
 	buffer << t.rdbuf();
+	t.close();
 	error = buffer.str();
 
 	ret = error.find("STATUS");
@@ -269,13 +272,15 @@ std::string Request::errorPage(std::string str)
 	// 	error.insert(ret, this->_bad_status);
 	//else
 		error.insert(ret, str);
-	return (str + "Content-Type: text/html\nContent-length: " + std::to_string(error.size()) + "\n\n" + error);
+	return (str + "Content-Type: text/html\nContent-length: " + ntostring(error.size()) + "\n\n" + error);
 }
 
 //else if ()
 //	this->_status = "HTTP/1.1 301 Moved Permanently\n";
 std::string Request::respond(class Server& srv)
 {
+	P(this->_location, "location respond");
+	P(sizeof(*this->_location), "size location respond");
 	debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
@@ -338,7 +343,7 @@ std::string Request::GETResponse(class Server &srv)
 	(void)srv;
 	std::string body;
 	//std::string contentType;
-	std::ifstream t("." + this->_root + this->_path + this->_filename);
+	std::ifstream t(("." + this->_root + this->_path + this->_filename).c_str());
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 
@@ -366,7 +371,7 @@ std::string Request::GETResponse(class Server &srv)
 	//contentType = contentType();
 	// if (contentType.empty())
 	// 	return ()
-	return ("HTTP/1.1 200 OK\n" + contentType() + "Content-length: " + std::to_string(body.size()) + "\n\n" + body);
+	return ("HTTP/1.1 200 OK\n" + contentType() + "Content-length: " + ntostring(body.size()) + "\n\n" + body);
 }
 
 std::string Request::contentType()
@@ -426,7 +431,7 @@ std::string Request::autoIndex()//// bug avec index
 		autoindex += directoryListing(dirp);
 		autoindex += "   <tr><th colspan=\"4\"><hr></th></tr>\n</table>\n<address>WebServ, created by pmaldagu, gverhelp, namenega</address>\n</body></html>";
 		closedir(dirp);
-		return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-length: " + std::to_string(autoindex.size()) + "\n\n" + autoindex);
+		return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-length: " + ntostring(autoindex.size()) + "\n\n" + autoindex);
 	}
 	return (autoindex);
 }
@@ -474,7 +479,7 @@ std::string Request::directoryListing(DIR* dirp)
 			if (!S_ISREG(info.st_mode))
 				buffer.insert(ret, "-");
 			else
-				buffer.insert(ret, formatSize(std::to_string(info.st_size)));
+				buffer.insert(ret, formatSize(ntostring(info.st_size)));
 
 			listing += buffer;
 		}
@@ -573,7 +578,7 @@ std::string Request::postAppend()
 
 	if (!this->_filename.empty())
 	{
-		file_out.open("." + this->_location->getRoot() + this->_path + this->_filename, std::ios_base::app);
+		file_out.open(("." + this->_location->getRoot() + this->_path + this->_filename).c_str(), std::ios_base::app);
 		if (file_out.is_open())
 		{
 			file_out << this->_body;

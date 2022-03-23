@@ -387,12 +387,12 @@ std::string Request::respond(class Server& srv)
 		if (this->_status.empty())
 		{
 			this->_status = "HTTP/1.1 200 OK\n";
-			response += this->_status + checkContentType() + "Content-length: " + std::to_string(content.size()) + "\n\n" + content;
+			response += this->_status + checkContentType() + "Content-length: " + ntostring(content.size()) + "\n\n" + content;
 		}
 		else
 		{
 			content = errorPage();
-			response = this->_status + "Content-Type: text/html\n" + "Content-length: " + std::to_string(content.size()) + "\n\n" + content;
+			response = this->_status + "Content-Type: text/html\n" + "Content-length: " + ntostring(content.size()) + "\n\n" + content;
 		}
 	// }
 	debug();

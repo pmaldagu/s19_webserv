@@ -6,16 +6,17 @@ SRCNAME 	=	srcs/main.cpp							\
 				srcs/Client.cpp							\
 				srcs/Request.cpp						\
 				srcs/CGI.cpp							\
+				srcs/utils.cpp
 
 SRCS 		= ${SRCNAME}
 
 OBJS 		= ${SRCS:.cpp=.o}
 
-NAME		= webserver_exec
+NAME		= webserv
 
 CXX 		= clang++
 RM 			= rm -f
-CXXFLAGS 	= -Wall -Wextra -Werror #-std=c++98
+CXXFLAGS 	= -g -Wall -Wextra -Werror -std=c++98
 
 
 #---------------COLORS---------------

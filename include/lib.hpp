@@ -31,6 +31,7 @@
 # include "Client.hpp"
 # include "Request.hpp"
 # include "CGI.hpp"
+# include "utils.hpp"
 
 # define BUFFERSIZE 4096
 
