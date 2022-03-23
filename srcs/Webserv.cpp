@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/02/18 17:19:35 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/23 17:44:00 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,6 +138,7 @@ void Webserv::setListen( void )
 int Webserv::setFds( void )
 {
 	int max_sd = -1;
+	int debug = 0;
 
 	/*clear fd set*/
 	FD_ZERO(&readfds);
@@ -148,6 +149,7 @@ int Webserv::setFds( void )
 	for	(; srv != _servers.end(); srv++)
 	{
 		FD_SET((*srv).getFd(), &readfds);
+		debug++;
 		if ((*srv).getFd() > max_sd)
 			max_sd = (*srv).getFd();
 	}
@@ -159,12 +161,14 @@ int Webserv::setFds( void )
 		if ((*clt).getFd() > 0)
 		{
 			FD_SET((*clt).getFd(), &readfds);
+			debug++;
 			if ((*clt).isReady())
 				FD_SET((*clt).getFd(), &writefds);
 			if ((*clt).getFd() > max_sd)
 				max_sd = (*clt).getFd();
 		}
 	}
+	// P(debug, "READFDS");
 	return (max_sd);
 }
 
@@ -174,7 +178,9 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 	int addrlen = sizeof(struct sockaddr_in);
 
 	/*accept*/	
+	// P((*it).getFd(), "GETFD");
 	new_socket = accept((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), (socklen_t*)&addrlen);
+	// P(errno, "ERRNO");
 	if (new_socket < 0)
 		throw std::runtime_error("accept() failed");
 	
@@ -270,24 +276,41 @@ void Webserv::launch( void )
 {
 	int ret = 0;
 	int max_sd;
+	struct timeval tv;
 
 	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)
 	{
-		/*select*/
-		std::cout << GREEN << "------------ DEBUT SELECT ------------" << RESET << std::endl;
 
 		/*set fd*/
+		// P(sizeof(readfds), "readfds");
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		fd_set readset;
+		fd_set writeset;
+		// while (ret == 0) {
 		max_sd = setFds();
-		ret = select(max_sd + 1, &readfds, &writefds, NULL,  NULL);
+		memcpy(&readset, &readfds, sizeof(readfds));// readset = readfds;
+		memcpy(&writeset, &writefds, sizeof(writefds));
+		// writeset = writefds;
+		ret = select(max_sd + 1, &readset, &writeset, NULL,  &tv);
+		if (ret == 0) {
+			std::cout << BLUE << "WAITING FOR CONNECTION...\n" << RESET << std::flush;
+		}
+		// P(ret, "RETRET");
+		// }
+		// ret = select(max_sd + 1, &readset, &writefds, NULL,  &tv);
+		// P(ret, "RETRET");
 		if (ret > 0)
 		{	
+			/*select*/
+			std::cout << GREEN << "------------ SELECT ------------" << RESET << std::endl << std::flush;
 			/*check client side*/
 			std::list<class Client>::iterator clt = _clients.begin();
 			for (; clt != _clients.end(); clt++)
 			{
 				/*set as write*/
-				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
+				if (FD_ISSET((*clt).getFd(), &writeset) && (*clt).isReady())
 					clt = sendResponse(clt);
 			}
 
@@ -295,8 +318,10 @@ void Webserv::launch( void )
 			for (; clt != _clients.end(); clt++)
 			{
 				/*set as read*/
-				if (FD_ISSET((*clt).getFd(), &readfds))
+				if (FD_ISSET((*clt).getFd(), &readset)) {
 					clt = receiveRequest(clt);
+					break ;
+				}
 			}
 
 			/*check master side*/
@@ -304,11 +329,14 @@ void Webserv::launch( void )
 			for (; srv != _servers.end(); srv++)
 			{
 				/*set as read*/
-				if (FD_ISSET((*srv).getFd(), &readfds))
+				if (FD_ISSET((*srv).getFd(), &readset)) {
 					acceptConnection(srv, "READ");
+					break ;
+				}
 			}
+			std::cout << std::endl << std::flush;
 		}
-		else
+		else if (ret == -1)
 		{
 			/*relance the multiplexer*/
 			std::list<class Client>::iterator clt = _clients.begin();
