@@ -39,7 +39,7 @@ Client& Client::operator=(Client const& copy)
 ///////////////////////////////////////////////////////////////////////////
 void Client::setRequest(char* buffer, Server& srv)
 {
-	this->_req = new Request(buffer, srv);
+	this->_req = new Request(buffer, srv, this->_fd);
 	this->_ready = true;
 }
 

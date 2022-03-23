@@ -21,8 +21,9 @@ Request::Request( void )
 	throw std::runtime_error("Request need buffer");
 }
 
-Request::Request(char* buffer, Server& srv)
+Request::Request(char* buffer, Server& srv, int clientFd)
 {
+	_clientFd = clientFd;
 	if (srv.getErrorPage().empty())
 		this->_errorpage = "./www/error.html";
 	else
@@ -71,7 +72,7 @@ void Request::splitBuffer(char* buffer)
 	std::string tmp(buffer);
 	size_t index = 0;
 	size_t ret = 0;
- 
+
 	tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
 	while (index < tmp.size() - 1)
 	{
@@ -546,15 +547,27 @@ std::string Request::previousPage() ///bug avec default location
 }
 	
 ///////////////////////////////////////////////////////////////////////////
-//////////////////////////// POST request /////////////////////////////////
+/*************************** POST request ********************************/
 ///////////////////////////////////////////////////////////////////////////
 std::string Request::POSTRequest(Server& srv)
 {
 	(void)srv;
 	std::list<std::string>::iterator 	it = this->_buffer.begin();
 	size_t								size = 0;
-	std::stringstream ss;
+	std::stringstream 					ss;
+	char								buffer[10000001];
+	int									ret = 1;
 
+	memset(buffer, 0, 10000001);
+	// while (ret != -1) {
+		ret = recv(_clientFd, buffer, 10000000, 0);
+		P(ret, "RET");
+		ss << buffer;
+	// }
+	P(ss.str().substr(0, 100), "IMAGE");
+	// std::ofstream of("./test.jpeg");
+	// of << ss.rdbuf();
+	// of.close();
 	for (; it != this->_buffer.end(); it++)
 	{
 		if ((*it).find("Content-Length: ") != std::string::npos)

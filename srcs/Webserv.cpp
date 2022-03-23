@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/03/23 17:52:15 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/23 19:37:47 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,11 +213,11 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	int		ret;
-	char	buffer[30001];
+	char	buffer[50001];
 
 	/*receive*/
-	memset(buffer, 0, 30001);
-	ret = recv((*it).getFd(), buffer, 30000, 0);
+	memset(buffer, 0, 50001);
+	ret = recv((*it).getFd(), buffer, 50000, 0);
 
 	/*Check error*/
 	if (ret == 0)

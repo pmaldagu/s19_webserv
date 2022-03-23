@@ -7,7 +7,7 @@ class Request
 {
     public :
         Request();
-        Request(char* buffer, Server& srv);
+        Request(char* buffer, Server& srv, int clientFd);
         Request(Request const& copy);
         virtual ~Request();
 
@@ -74,6 +74,7 @@ class Request
 		std::string				_body;
 		std::string				_errorpage;
 		Location*				_location;
+		int						_clientFd;
 };
 
 #endif
