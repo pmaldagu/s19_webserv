@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/03/23 17:44:00 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/23 17:52:15 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	int		ret;
-	char	buffer[30001]; // change 3000 par max body size ?;
+	char	buffer[30001];
 
 	/*receive*/
 	memset(buffer, 0, 30001);
@@ -278,30 +278,19 @@ void Webserv::launch( void )
 	int max_sd;
 	struct timeval tv;
 
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
 	std::cout << GREEN << "\n----------SELECT LOOP----------\n" << RESET << std::endl;
 	while (true)
 	{
 
 		/*set fd*/
-		// P(sizeof(readfds), "readfds");
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-		fd_set readset;
-		fd_set writeset;
-		// while (ret == 0) {
 		max_sd = setFds();
-		memcpy(&readset, &readfds, sizeof(readfds));// readset = readfds;
-		memcpy(&writeset, &writefds, sizeof(writefds));
-		// writeset = writefds;
-		ret = select(max_sd + 1, &readset, &writeset, NULL,  &tv);
-		if (ret == 0) {
-			std::cout << BLUE << "WAITING FOR CONNECTION...\n" << RESET << std::flush;
-		}
-		// P(ret, "RETRET");
-		// }
-		// ret = select(max_sd + 1, &readset, &writefds, NULL,  &tv);
-		// P(ret, "RETRET");
-		if (ret > 0)
+
+		ret = select(max_sd + 1, &readfds, &writefds, NULL,  &tv);
+		if (ret == 0)
+			std::cout << BLUE << "\rWAITING FOR I/O OPERATION ..." << RESET << std::flush;
+		else if (ret > 0)
 		{	
 			/*select*/
 			std::cout << GREEN << "------------ SELECT ------------" << RESET << std::endl << std::flush;
@@ -310,7 +299,7 @@ void Webserv::launch( void )
 			for (; clt != _clients.end(); clt++)
 			{
 				/*set as write*/
-				if (FD_ISSET((*clt).getFd(), &writeset) && (*clt).isReady())
+				if (FD_ISSET((*clt).getFd(), &writefds) && (*clt).isReady())
 					clt = sendResponse(clt);
 			}
 
@@ -318,7 +307,7 @@ void Webserv::launch( void )
 			for (; clt != _clients.end(); clt++)
 			{
 				/*set as read*/
-				if (FD_ISSET((*clt).getFd(), &readset)) {
+				if (FD_ISSET((*clt).getFd(), &readfds)) {
 					clt = receiveRequest(clt);
 					break ;
 				}
@@ -329,7 +318,7 @@ void Webserv::launch( void )
 			for (; srv != _servers.end(); srv++)
 			{
 				/*set as read*/
-				if (FD_ISSET((*srv).getFd(), &readset)) {
+				if (FD_ISSET((*srv).getFd(), &readfds)) {
 					acceptConnection(srv, "READ");
 					break ;
 				}
