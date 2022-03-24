@@ -72,6 +72,7 @@ void Request::splitBuffer(std::string buffer)
 	size_t index = 0;
 	size_t ret = 0;
 
+	P(buffer, "buffer");
 	buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
 	while (index < buffer.size())
 	{
@@ -144,7 +145,7 @@ void Request::parseBody()
 	std::list<std::string>::iterator	it = this->_buffer.begin();
 	bool								chunck = false;
 
-	debug();
+	//debug();
 	for (; it != this->_buffer.end(); it++)
 	{
 		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
@@ -279,9 +280,7 @@ std::string Request::errorPage(std::string str)
 //	this->_status = "HTTP/1.1 301 Moved Permanently\n";
 std::string Request::respond(class Server& srv)
 {
-	P(this->_location, "location respond");
-	P(sizeof(*this->_location), "size location respond");
-	debug();
+	//debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
 	else if (!this->_location->getRedirection().empty())
@@ -312,7 +311,7 @@ std::string Request::GETRequest(Server& srv)
 	response = autoIndex();
 	if (response.empty())
 		response = GETResponse(srv);
-	debug();
+	//debug();
 	return (response);
 }
 
@@ -580,7 +579,7 @@ std::string Request::POSTRequest(Server& srv)
 	if (size > srv.getCmaxsize())
 		return ("HTTP/1.1 413 Request Entity Too Large\n");
 	parseBody();
-	P(this->_body, "this body");
+	//P(this->_body, "this body");
 	return (postAppend());
 }
 

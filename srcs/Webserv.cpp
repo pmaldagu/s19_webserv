@@ -213,14 +213,30 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	int		ret = 1;
-	char	buffer[4096];
+	char	buffer[4097];
 	std::string msg;
 
 	/*receive*/
 	while (ret > 0)
 	{
-		memset(buffer, 0, 4096);
+		memset(buffer, 0, 4097);
 		ret = recv((*it).getFd(), buffer, 4096, 0);
+		P(ret, "ret");
+		msg += buffer;
+	}
+
+	/*debug*/
+	ret = 1;
+	std::cout << YELLOW << "[" << msg << "]" << RESET << std::endl;
+	sleep(2);
+	//ret = send((*it).getFd(), "HTTP/2.0 100 Continue\n", 22, 0);
+	P(ret, "send ret");
+
+	while (ret > 0)
+	{
+		memset(buffer, 0, 4097);
+		ret = recv((*it).getFd(), buffer, 4096, 0);
+		P(ret, "ret3");
 		msg += buffer;
 	}
 
