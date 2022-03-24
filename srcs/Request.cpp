@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/03/24 11:26:37 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/03/24 16:00:00 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ void Request::splitBuffer(std::string buffer)
 	size_t index = 0;
 	size_t ret = 0;
 
-	P(buffer, "buffer");
+	//P(buffer, "buffer");
 	buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
 	while (index < buffer.size())
 	{
@@ -367,6 +367,7 @@ std::string Request::GETResponse(class Server &srv)
 	}
 	else
 		body = buffer.str();
+	P(body.size(), "BODY");
 	//contentType = contentType();
 	// if (contentType.empty())
 	// 	return ()

@@ -6,11 +6,12 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/03/24 11:38:23 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/03/24 18:15:04 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/lib.hpp"
+#include <cstring>
 
 Webserv::Webserv() : on(1)
 {
@@ -213,47 +214,49 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	int		ret = 1;
-	char	buffer[4097];
-	std::string msg;
+	char	buffer[5];
+	std::stringstream msg;
+	//int debug = 0;
 
 	/*receive*/
 	while (ret > 0)
 	{
-		memset(buffer, 0, 4097);
-		ret = recv((*it).getFd(), buffer, 4096, 0);
-		P(ret, "ret");
-		msg += buffer;
+		memset(buffer, 0, 5);
+		ret = recv((*it).getFd(), &buffer, 4, 0);
+		//debug += ret;
+		if (ret > 0)
+			msg.write((const char *)buffer, ret);
+		//msg.seekp(0, std::ios::end);	
+		//P(std::strlen((const char *)buffer), "LENGH");
+		//P(msg.tellp(), "SIZE");
+		//P(debug, "UPLOADED");
 	}
 
-	/*debug*/
-	ret = 1;
-	std::cout << YELLOW << "[" << msg << "]" << RESET << std::endl;
-	sleep(2);
-	//ret = send((*it).getFd(), "HTTP/2.0 100 Continue\n", 22, 0);
-	P(ret, "send ret");
-
-	while (ret > 0)
+	/*100 Continue*/
+	if (msg.str().find("Expect") != std::string::npos)
 	{
-		memset(buffer, 0, 4097);
-		ret = recv((*it).getFd(), buffer, 4096, 0);
-		P(ret, "ret3");
-		msg += buffer;
-	}
-
+		ret = 1;
+		sleep(1);
+		while (ret > 0)
+		{
+			memset(buffer, 0, 5);
+			ret = recv((*it).getFd(), &buffer, 4, 0);	
+			if (ret > 0)
+				msg.write((const char *)buffer, ret);
+			//debug += ret;
+			//msg << buffer;
+		}
+	}	
+	
 	/*Check error*/
 	if (ret == 0)
 	{
-		std::cout << BLUE << "CONNECTION CLOSED WITH FD: " << (*it).getFd() << RESET << std::endl;
+		std::cout << BLUE << "\nCONNECTION CLOSED WITH FD: " << (*it).getFd() << RESET << std::endl << std::flush;
 		return (_clients.erase(it));
 	}
-	//if (ret == -1)
-	//{
-	//	close((*it).getFd());
-		//return (_clients.erase(it));
-	//}
 
 	/*link request to client*/
-	(*it).setRequest(msg, getServer((*it).getListen()));
+	(*it).setRequest(msg.str(), getServer((*it).getListen()));
 
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
@@ -261,7 +264,7 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 	std::cout << GREEN << "-> Receive" << RESET << std::endl;
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
-	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer;
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << msg.str().substr(0, 400) << std::endl;
 	return (it);
 }
 
@@ -288,8 +291,7 @@ std::list<class Client>::iterator Webserv::sendResponse(std::list<class Client>:
 	std::cout << GREEN << "-> Send" << RESET << std::endl;
 	std::cout << GREEN << "  -listen fd : " << RESET << (*it).getListen() << std::endl;
 	std::cout << GREEN << "  -Socket fd : " << RESET << (*it).getFd() << std::endl;
-	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer.substr(0, 100) << std::endl; //TODO A CHANGER
-	// printf("buffer : ", );
+	std::cout << GREEN << "  -Message : " << RESET << std::endl << buffer.substr(0, 400) << std::endl;
 
 	/*close client*/
 	close((*it).getFd());
@@ -317,7 +319,7 @@ void Webserv::launch( void )
 		else if (ret > 0)
 		{	
 			/*select*/
-			std::cout << GREEN << "------------ SELECT ------------" << RESET << std::endl << std::flush;
+			std::cout << GREEN << "\n------------ SELECT ------------\n" << RESET << std::endl << std::flush;
 			/*check client side*/
 			std::list<class Client>::iterator clt = _clients.begin();
 			for (; clt != _clients.end(); clt++)
