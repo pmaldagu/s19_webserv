@@ -160,7 +160,10 @@ void Request::parseBody()
 	if (it != this->_buffer.end())
 		it++;
 	for (; it != this->_buffer.end(); it++)
+	{
 		this->_body.append((*it) + "\n");
+		// P(this->_body, "bodyy");
+	}
 	if (chunck)
 		dechunk();  //https://fr.wikipedia.org/wiki/Chunked_transfer_encoding
 }
@@ -585,30 +588,31 @@ std::string Request::postUpload()
 	for (; it != this->_buffer.end(); it++)
 	{
 		if ((ret = (*it).find("boundary=")) != std::string::npos)
-			boundary = (*it).substr(ret + 9, (*it).size() - 1);
+			boundary = (*it).substr(ret + 9, (*it).size() - (ret + 9));
 		if ((ret = (*it).find("filename=")) != std::string::npos)
 		{
-			std::cout << BLUE << "[" << (*it) << "]" << RESET << std::endl;
-			filename = (*it).substr(ret + 9, (*it).size() - 1); //(*it).rfind("\"") - 7);
-			filename.erase(std::remove(filename.begin(), filename.end(), '\"'), filename.end());
+			//std::cout << BLUE << "[" << (*it) << "]" << RESET << std::endl;
+			filename = (*it).substr(ret + 10, (*it).size() - (ret + 11));
 		}
 	}
 	std::ofstream ofs;
 	if (!this->_location->getUploadDir().empty())
 	{
-		P("OK1", "OK1");
-		P("." + this->_location->getUploadDir() + "/" + filename, "open 1");
-		P(filename.size(), "size filename");
+		// P("OK1", "OK1");
+		// P("." + this->_location->getUploadDir() + "/" + filename, "open 1");
 		ofs.open(("." + this->_location->getUploadDir() + "/" + filename).c_str(), std::ios_base::trunc);
 	}
 	else
 	{
-		P("OK2", "OK2");
+		// P("OK2", "OK2");
 		ofs.open(("." + this->_location->getRoot() + "/" + filename).c_str(), std::ios_base::trunc); 			/// à vérifier
 	}
 	ofs << this->_body.substr(0, this->_body.find(boundary));
-	P(this->_body.substr(0, this->_body.find(boundary)), "_body");
-	P(this->_body, "body 2");
+	P(boundary, "boundary");
+	P(this->_body.size(), "size body");
+	P(this->_body.rfind(boundary), "foundary");
+	//P(this->_body.substr(0, this->_body.rfind(boundary)), "_body");
+	// P(this->_body, "body 2");
 	ofs.close();
 	return ("HTTP/1.1 200 OK\n");
 }

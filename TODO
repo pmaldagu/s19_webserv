@@ -4,3 +4,6 @@
 4. default page
 5. auto_index location /
 6. Enlever errno et throw inutile
+7. Vérifier les substr
+8. Server name
+9. CGI
