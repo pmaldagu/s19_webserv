@@ -554,19 +554,7 @@ std::string Request::POSTRequest(Server& srv)
 	std::list<std::string>::iterator 	it = this->_buffer.begin();
 	size_t								size = 0;
 	std::stringstream 					ss;
-	//char								buffer[10000001];
-	//int									ret = 1;
 
-	//memset(buffer, 0, 10000001);
-	// while (ret != -1) {
-	//	ret = recv(_clientFd, buffer, 10000000, 0);
-	//	P(ret, "RET");
-	//	ss << buffer;
-	// }
-	//P(ss.str().substr(0, 100), "IMAGE");
-	// std::ofstream of("./test.jpeg");
-	// of << ss.rdbuf();
-	// of.close();
 	for (; it != this->_buffer.end(); it++)
 	{
 		if ((*it).find("Content-Length: ") != std::string::npos)
@@ -581,7 +569,48 @@ std::string Request::POSTRequest(Server& srv)
 		return ("HTTP/1.1 413 Request Entity Too Large\n");
 	parseBody();
 	//P(this->_body, "this body");
-	return (postAppend());
+	if (!this->_filename.empty())
+		return (postAppend());
+	return (postUpload());
+}
+
+std::string Request::postUpload()
+{
+	std::list<std::string>::iterator 	it = this->_buffer.begin();
+	std::string							boundary;
+	std::string							filename;
+	size_t								ret;
+
+	debug();
+	for (; it != this->_buffer.end(); it++)
+	{
+		if ((ret = (*it).find("boundary=")) != std::string::npos)
+			boundary = (*it).substr(ret + 9, (*it).size() - 1);
+		if ((ret = (*it).find("filename=")) != std::string::npos)
+		{
+			std::cout << BLUE << "[" << (*it) << "]" << RESET << std::endl;
+			filename = (*it).substr(ret + 9, (*it).size() - 1); //(*it).rfind("\"") - 7);
+			filename.erase(std::remove(filename.begin(), filename.end(), '\"'), filename.end());
+		}
+	}
+	std::ofstream ofs;
+	if (!this->_location->getUploadDir().empty())
+	{
+		P("OK1", "OK1");
+		P("." + this->_location->getUploadDir() + "/" + filename, "open 1");
+		P(filename.size(), "size filename");
+		ofs.open(("." + this->_location->getUploadDir() + "/" + filename).c_str(), std::ios_base::trunc);
+	}
+	else
+	{
+		P("OK2", "OK2");
+		ofs.open(("." + this->_location->getRoot() + "/" + filename).c_str(), std::ios_base::trunc); 			/// à vérifier
+	}
+	ofs << this->_body.substr(0, this->_body.find(boundary));
+	P(this->_body.substr(0, this->_body.find(boundary)), "_body");
+	P(this->_body, "body 2");
+	ofs.close();
+	return ("HTTP/1.1 200 OK\n");
 }
 
 std::string Request::postAppend()
@@ -631,7 +660,7 @@ void Request::debug( void )
 	std::cout << RED << "LOCATION : " << RESET << this->_location->getPath() << std::endl;
 	for (it = this->_accept.begin(); it != this->_accept.end(); it++)
 		std::cout << "   " << (*it) << std::endl;
-	std::cout << RED << "BUFFER : " << RESET << std::endl;
-	for (it = this->_buffer.begin(); it != this->_buffer.end(); it++)
-		std::cout << "   " << (*it) << std::endl;
+	// std::cout << RED << "BUFFER : " << RESET << std::endl;
+	// for (it = this->_buffer.begin(); it != this->_buffer.end(); it++)
+	// 	std::cout << "   " << (*it) << std::endl;
 }

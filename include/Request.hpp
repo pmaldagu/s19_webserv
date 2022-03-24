@@ -55,6 +55,7 @@ class Request
 
 		/*POST request*/
 		std::string							POSTRequest(Server& srv);
+		std::string							postUpload();
 		std::string							postAppend();
 
 		/*DELETE request*/

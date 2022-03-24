@@ -214,22 +214,21 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
 	int		ret = 1;
-	char	buffer[5];
+	char	buffer[4096];
 	std::stringstream msg;
-	//int debug = 0;
+	int debug = 0;
 
 	/*receive*/
 	while (ret > 0)
 	{
-		memset(buffer, 0, 5);
-		ret = recv((*it).getFd(), &buffer, 4, 0);
-		//debug += ret;
+		memset(buffer, 0, 4096);
+		ret = recv((*it).getFd(), &buffer, 4096, 0);
 		if (ret > 0)
 			msg.write((const char *)buffer, ret);
-		//msg.seekp(0, std::ios::end);	
-		//P(std::strlen((const char *)buffer), "LENGH");
-		//P(msg.tellp(), "SIZE");
-		//P(debug, "UPLOADED");
+		debug += ret;
+		// msg.seekp(0, std::ios::end);	
+		// P(msg.tellp(), "SIZE");
+		// P(debug, "UPLOADED");
 	}
 
 	/*100 Continue*/
@@ -239,12 +238,14 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 		sleep(1);
 		while (ret > 0)
 		{
-			memset(buffer, 0, 5);
-			ret = recv((*it).getFd(), &buffer, 4, 0);	
+			memset(buffer, 0, 4096);
+			ret = recv((*it).getFd(), &buffer, 4096, 0);	
 			if (ret > 0)
 				msg.write((const char *)buffer, ret);
-			//debug += ret;
-			//msg << buffer;
+			debug += ret;
+			// msg.seekp(0, std::ios::end);
+			// P(msg.tellp(), "SIZE");
+			// P(debug, "UPLOADED");
 		}
 	}	
 	
