@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/03/14 10:48:23 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/24 11:26:37 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Request::Request( void )
 	throw std::runtime_error("Request need buffer");
 }
 
-Request::Request(char* buffer, Server& srv, int clientFd)
+Request::Request(std::string buffer, Server& srv, int clientFd)
 {
 	_clientFd = clientFd;
 	if (srv.getErrorPage().empty())
@@ -67,18 +67,17 @@ Request& Request::operator=(Request const& copy)
 ///////////////////////////////////////////////////////////////////////////
 //////////////////////////////// Parser ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-void Request::splitBuffer(char* buffer)
+void Request::splitBuffer(std::string buffer)
 {
-	std::string tmp(buffer);
 	size_t index = 0;
 	size_t ret = 0;
 
-	tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
-	while (index < tmp.size() - 1)
+	buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
+	while (index < buffer.size())
 	{
-		if ((ret = tmp.find("\n", index)) == std::string::npos)
-			ret = tmp.size() - 1;
-		this->_buffer.push_back(tmp.substr(index, ret - index));
+		if ((ret = buffer.find("\n", index)) == std::string::npos)
+			ret = buffer.size();
+		this->_buffer.push_back(buffer.substr(index, ret - index));
 		index = ret + 1;
 	}
 }
@@ -474,7 +473,7 @@ std::string Request::directoryListing(DIR* dirp)
 				buffer.insert(ret, "/icons/unknown.gif");
 			ret = buffer.find("[LASTMOD]");
 			buffer.erase(ret, 9);
-			buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//info.st_mtimespec pour mac
+			buffer.insert(ret, formatLastMod(&info.st_mtim));	//info.st_mtimespec pour mac
 			ret = buffer.find("[SIZE]");
 			buffer.erase(ret, 6);
 			if (!S_ISREG(info.st_mode))
@@ -555,16 +554,16 @@ std::string Request::POSTRequest(Server& srv)
 	std::list<std::string>::iterator 	it = this->_buffer.begin();
 	size_t								size = 0;
 	std::stringstream 					ss;
-	char								buffer[10000001];
-	int									ret = 1;
+	//char								buffer[10000001];
+	//int									ret = 1;
 
-	memset(buffer, 0, 10000001);
+	//memset(buffer, 0, 10000001);
 	// while (ret != -1) {
-		ret = recv(_clientFd, buffer, 10000000, 0);
-		P(ret, "RET");
-		ss << buffer;
+	//	ret = recv(_clientFd, buffer, 10000000, 0);
+	//	P(ret, "RET");
+	//	ss << buffer;
 	// }
-	P(ss.str().substr(0, 100), "IMAGE");
+	//P(ss.str().substr(0, 100), "IMAGE");
 	// std::ofstream of("./test.jpeg");
 	// of << ss.rdbuf();
 	// of.close();

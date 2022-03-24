@@ -14,7 +14,7 @@ class Client
 			Client&			operator=(Client const& copy);
 
 			/*setter*/
-			void			setRequest(char* buffer, Server& srv);
+			void			setRequest(std::string buffer, Server& srv);
 
 			/*getter*/
 			int				getListen( void ) const;

@@ -7,14 +7,14 @@ class Request
 {
     public :
         Request();
-        Request(char* buffer, Server& srv, int clientFd);
+        Request(std::string buffer, Server& srv, int clientFd);
         Request(Request const& copy);
         virtual ~Request();
 
         Request&							operator=(Request const& copy);
 
 		/*parser*/
-		void								splitBuffer(char *buffer);
+		void								splitBuffer(std::string buffer);
 		void								parseHttpVersion();
 		void								parseType( void );
 		void								parsePath( void );

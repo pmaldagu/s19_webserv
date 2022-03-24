@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 15:09:58 by pmaldagu          #+#    #+#             */
-/*   Updated: 2022/03/23 19:37:47 by namenega         ###   ########.fr       */
+/*   Updated: 2022/03/24 11:38:23 by pmaldagu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,24 +212,32 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 
 std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client>::iterator it)
 {
-	int		ret;
-	char	buffer[50001];
+	int		ret = 1;
+	char	buffer[4096];
+	std::string msg;
 
 	/*receive*/
-	memset(buffer, 0, 50001);
-	ret = recv((*it).getFd(), buffer, 50000, 0);
+	while (ret > 0)
+	{
+		memset(buffer, 0, 4096);
+		ret = recv((*it).getFd(), buffer, 4096, 0);
+		msg += buffer;
+	}
 
 	/*Check error*/
 	if (ret == 0)
 	{
-		close((*it).getFd());
+		std::cout << BLUE << "CONNECTION CLOSED WITH FD: " << (*it).getFd() << RESET << std::endl;
 		return (_clients.erase(it));
 	}
-	if (ret == -1)
-		return (_clients.erase(it));
+	//if (ret == -1)
+	//{
+	//	close((*it).getFd());
+		//return (_clients.erase(it));
+	//}
 
 	/*link request to client*/
-	(*it).setRequest(buffer, getServer((*it).getListen()));
+	(*it).setRequest(msg, getServer((*it).getListen()));
 
 	/*print info*/		
 	std::cout << RED << "===CLIENT===" << RESET << std::endl;
