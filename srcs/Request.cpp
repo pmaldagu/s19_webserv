@@ -69,18 +69,31 @@ Request& Request::operator=(Request const& copy)
 ///////////////////////////////////////////////////////////////////////////
 void Request::splitBuffer(std::string buffer)
 {
-	size_t index = 0;
-	size_t ret = 0;
+	size_t	index = 0;
+	size_t	ret = 0;
+	bool	boundary = false;
 
-	//P(buffer, "buffer");
-	buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
-	while (index < buffer.size())
+	//P(buffer.size(), "size buffer");
+	// buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
+	while (index < buffer.size() && buffer[index] != '\r')
 	{
 		if ((ret = buffer.find("\n", index)) == std::string::npos)
-			ret = buffer.size();
+			break ;// ret = buffer.size();
 		this->_buffer.push_back(buffer.substr(index, ret - index));
 		index = ret + 1;
+		if (this->_buffer.back().find("boundary=") != std::string::npos)
+			boundary = true;
+		if (buffer[index] == '\r' && boundary)
+		{
+			index += 2;
+			boundary = false;
+		}
 	}
+	if (index + 2 != buffer.size())
+	 	this->_body = buffer.erase(0, index + 2);
+	// std::list<std::string>::iterator it = this->_buffer.begin();
+	// for (; it != this->_buffer.end(); it++)
+	// 	P((*it), "it");
 }
 
 void Request::parseHttpVersion()
@@ -90,7 +103,7 @@ void Request::parseHttpVersion()
 
 	for (int i = 0; i < 2; i++)
 		ret = (*it).find(" ", ret + 1);
-	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 1);
+	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 2);
 }
 
 void Request::parseType( void )
@@ -99,6 +112,7 @@ void Request::parseType( void )
 
 	ret = this->_buffer.begin()->find(" ");
 	this->_type = this->_buffer.begin()->substr(0 , ret);
+	this->_type.erase(std::remove(this->_type.begin(), this->_type.end(), '\r'), this->_type.end());
 }
 
 void Request::parsePath( void )
@@ -107,6 +121,7 @@ void Request::parsePath( void )
 
 	ret = this->_buffer.begin()->find(" ");
 	this->_path = this->_buffer.begin()->substr(ret + 1, this->_buffer.begin()->find(" ", ret + 1) - ret - 1);
+	this->_path.erase(std::remove(this->_path.begin(), this->_path.end(), '\r'), this->_path.end());
 }
 
 void Request::parseLocation(Server& srv)		 //////// Probleme : si filename = au nom d'une location -> server crash
@@ -156,9 +171,15 @@ void Request::parseBody()
 	}
 	it = this->_buffer.begin();
 	while (it != this->_buffer.end() && (*it).size() != 0)
+	{
+		if ((*it).find("boundary=") != std::string::npos)
+			it++;
 		it++;
+	}
 	if (it != this->_buffer.end())
 		it++;
+	// P((*it), "it");
+	// P((*it).size(), "it size");
 	for (; it != this->_buffer.end(); it++)
 	{
 		this->_body.append((*it) + "\n");
@@ -370,7 +391,7 @@ std::string Request::GETResponse(class Server &srv)
 	}
 	else
 		body = buffer.str();
-	P(body.size(), "BODY");
+	//P(body.size(), "BODY");
 	//contentType = contentType();
 	// if (contentType.empty())
 	// 	return ()
@@ -570,7 +591,7 @@ std::string Request::POSTRequest(Server& srv)
 	}
 	if (size > srv.getCmaxsize())
 		return ("HTTP/1.1 413 Request Entity Too Large\n");
-	parseBody();
+	//parseBody();
 	//P(this->_body, "this body");
 	if (!this->_filename.empty())
 		return (postAppend());
@@ -584,35 +605,20 @@ std::string Request::postUpload()
 	std::string							filename;
 	size_t								ret;
 
-	debug();
+	//debug();
 	for (; it != this->_buffer.end(); it++)
 	{
-		if ((ret = (*it).find("boundary=")) != std::string::npos)
-			boundary = (*it).substr(ret + 9, (*it).size() - (ret + 9));
+		if ((ret = (*it).rfind("boundary=")) != std::string::npos)
+			boundary = "--" + (*it).substr(ret + 9, (*it).size() - (ret + 10)) + "--";
 		if ((ret = (*it).find("filename=")) != std::string::npos)
-		{
-			//std::cout << BLUE << "[" << (*it) << "]" << RESET << std::endl;
-			filename = (*it).substr(ret + 10, (*it).size() - (ret + 11));
-		}
+			filename = (*it).substr(ret + 10, (*it).size() - (ret + 12));
 	}
 	std::ofstream ofs;
 	if (!this->_location->getUploadDir().empty())
-	{
-		// P("OK1", "OK1");
-		// P("." + this->_location->getUploadDir() + "/" + filename, "open 1");
 		ofs.open(("." + this->_location->getUploadDir() + "/" + filename).c_str(), std::ios_base::trunc);
-	}
 	else
-	{
-		// P("OK2", "OK2");
-		ofs.open(("." + this->_location->getRoot() + "/" + filename).c_str(), std::ios_base::trunc); 			/// à vérifier
-	}
-	ofs << this->_body.substr(0, this->_body.find(boundary));
-	P(boundary, "boundary");
-	P(this->_body.size(), "size body");
-	P(this->_body.rfind(boundary), "foundary");
-	//P(this->_body.substr(0, this->_body.rfind(boundary)), "_body");
-	// P(this->_body, "body 2");
+		ofs.open(("." + this->_location->getRoot() + "/" + filename).c_str(), std::ios_base::trunc);
+	ofs << this->_body.erase(this->_body.rfind(boundary) - 2, this->_body.size() - boundary.size() - 2);
 	ofs.close();
 	return ("HTTP/1.1 200 OK\n");
 }
@@ -664,7 +670,7 @@ void Request::debug( void )
 	std::cout << RED << "LOCATION : " << RESET << this->_location->getPath() << std::endl;
 	for (it = this->_accept.begin(); it != this->_accept.end(); it++)
 		std::cout << "   " << (*it) << std::endl;
-	// std::cout << RED << "BUFFER : " << RESET << std::endl;
-	// for (it = this->_buffer.begin(); it != this->_buffer.end(); it++)
-	// 	std::cout << "   " << (*it) << std::endl;
+	std::cout << RED << "BUFFER : " << RESET << std::endl;
+	for (it = this->_buffer.begin(); it != this->_buffer.end(); it++)
+		std::cout << "   " << (*it) << std::endl;
 }

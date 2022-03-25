@@ -248,7 +248,7 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 			// P(debug, "UPLOADED");
 		}
 	}	
-	
+	//P(debug + 1, "debug");
 	/*Check error*/
 	if (ret == 0)
 	{
