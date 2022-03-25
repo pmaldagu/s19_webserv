@@ -83,14 +83,14 @@ void Server::setRoot(std::string myroot)
     this->_root = myroot;
 }
 
-void Server::setPort(std::string myport)
+void Server::setPort(std::string myport, class Server *srv)
 {
     myport.erase(std::remove_if(myport.begin(), myport.end(), isspace), myport.end());
     myport.erase(0, 6);
     if (myport.size() != 4)
     {
-        std::cerr << "Error : The port is not valid.\n";
-        throw std::exception();
+        delete srv;
+        throw std::runtime_error("Error : The port is not valid.");
     }
     this->_port = myport;
 }
@@ -102,7 +102,7 @@ void Server::setHost(std::string myhost)
     this->_host = myhost;
 }
 
-void Server::setCmaxsize(std::string myclientbodysize)
+void Server::setCmaxsize(std::string myclientbodysize, class Server *srv)
 {
     std::stringstream    ss;
     size_t              num;
@@ -121,7 +121,10 @@ void Server::setCmaxsize(std::string myclientbodysize)
     else if (myclientbodysize[i] == 'G')
         num *= 1000000000;
     else if (myclientbodysize[i] == '\n')
+    {
+        delete srv;
         throw std::runtime_error("Invalid max client body size.");
+    }
     this->_client_max_body_size = num;
 }
 
@@ -198,7 +201,7 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
     while ((*it).find("}") == std::string::npos)
     {
         if ((*it).find("location") != std::string::npos)
-            newLocation->setPath(*it);
+            newLocation->setPath(*it, newLocation);
         else if ((*it).find("root") != std::string::npos)
             newLocation->setRoot(*it);
         else if ((*it).find("autoindex") != std::string::npos)

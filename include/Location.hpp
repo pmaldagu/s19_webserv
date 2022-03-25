@@ -14,7 +14,7 @@ class Location
 
         /*Setters*/
         void        setIndex(std::string index);
-        void        setPath(std::string path);
+        void        setPath(std::string path, class Location *loca);
         void        setUploadDir(std::string uploaddir);
         void        setRoot(std::string root);
         void        setRedirection(std::string redirection);

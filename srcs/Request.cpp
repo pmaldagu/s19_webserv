@@ -447,10 +447,6 @@ std::string Request::autoIndex()//// bug avec index
 				autoindex = header;
 			}
 		}
-		// else	 ///sub header
-		// {
-
-		// }
 		autoindex += table;
 		autoindex += directoryListing(dirp);
 		autoindex += "   <tr><th colspan=\"4\"><hr></th></tr>\n</table>\n<address>WebServ, created by pmaldagu, gverhelp, namenega</address>\n</body></html>";

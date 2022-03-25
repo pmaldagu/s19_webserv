@@ -139,11 +139,11 @@ void Config::setServ()
                 else if ((*it).find("root") != std::string::npos)
                     newServ->setRoot(*it);
                 else if ((*it).find("listen") != std::string::npos)
-                    newServ->setPort(*it);
+                    newServ->setPort(*it, newServ);
                 else if ((*it).find("host") != std::string::npos)
                     newServ->setHost(*it);
                 else if ((*it).find("client_max_body_size") != std::string::npos)
-                    newServ->setCmaxsize(*it);
+                    newServ->setCmaxsize(*it, newServ);
                 else if ((*it).find("error_page") != std::string::npos)
                     newServ->setErrorPage(*it);
                 else if ((*it).find("server_name") != std::string::npos)

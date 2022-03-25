@@ -19,9 +19,9 @@ class Server
 				/*Setters*/
 				void																setFd(int fd);
         void                                setRoot(std::string myroot);
-        void                                setPort(std::string myport);
+        void                                setPort(std::string myport, class Server *srv);
         void                                setHost(std::string myhost);
-        void                                setCmaxsize(std::string myclientbodysize);
+        void                                setCmaxsize(std::string myclientbodysize, class Server *srv);
         void                                setServername(std::string servername);
         void                                setErrorPage(std::string errorpage);
         void                                setGetMethod(bool b);
