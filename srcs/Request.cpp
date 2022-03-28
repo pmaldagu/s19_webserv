@@ -493,7 +493,8 @@ std::string Request::directoryListing(DIR* dirp)
 				buffer.insert(ret, "/icons/unknown.gif");
 			ret = buffer.find("[LASTMOD]");
 			buffer.erase(ret, 9);
-			buffer.insert(ret, formatLastMod(&info.st_mtim));	//info.st_mtimespec pour mac
+			buffer.insert(ret, formatLastMod(&info.st_mtim));	//Linux/WSL
+			// buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//Mac
 			ret = buffer.find("[SIZE]");
 			buffer.erase(ret, 6);
 			if (!S_ISREG(info.st_mode))
