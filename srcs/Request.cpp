@@ -32,6 +32,7 @@ Request::Request(std::string buffer, Server& srv, int clientFd)
 	parseType();
 	parsePath();
 	parseHttpVersion();
+	parseHostName();
 	parseFilename();
 	parseLocation(srv);
 	//debug();
@@ -104,6 +105,18 @@ void Request::parseHttpVersion()
 	for (int i = 0; i < 2; i++)
 		ret = (*it).find(" ", ret + 1);
 	this->_httpver = (*it).substr(ret + 1, (*it).size() - ret - 2);
+}
+
+void Request::parseHostName()
+{
+	std::list<std::string>::iterator it = this->_buffer.begin();
+
+	for (; it != this->_buffer.end(); it++)
+	{
+		if ((*it).find("Host: ") != std::string::npos)
+			this->_servhostname = (*it).substr(6, (*it).size() - 7);
+	}
+	// P(this->_servhostname, "hostname");
 }
 
 void Request::parseType( void )
@@ -241,6 +254,11 @@ std::string Request::getHttpver( void ) const
 	return (this->_httpver);
 }
 
+std::string Request::getServHostName( void ) const
+{
+	return (this->_servhostname);
+}
+
 std::string Request::getRoot( void ) const
 {
 	return (this->_root);
@@ -307,6 +325,8 @@ std::string Request::respond(class Server& srv)
 	//debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
+	if ((this->_servhostname != srv.getHost() + ":" + srv.getPort()) && (this->_servhostname != "localhost:" + srv.getPort()))
+	 	return (errorPage("HTTP/1.1 400 Bad Request\n"));
 	else if (!this->_location->getRedirection().empty())
 		return ("HTTP/1.1 301 Moved Permanently\nLocation: " + this->_location->getRedirection() + "\n");
 	else if ((this->_type == "GET" && !this->_location->getGetMethod()) ||
@@ -661,6 +681,7 @@ void Request::debug( void )
 	std::cout << RED << "TYPE : " << RESET << this->getType() << std::endl;
 	std::cout << RED << "PATH : " << RESET << this->getPath() << std::endl;
 	std::cout << RED << "HTTP : " << RESET <<this->getHttpver() << std::endl;
+	std::cout << RED << "HOSTNAME : " << RESET << this->getServHostName() << std::endl;
 	std::cout << RED << "FILE NAME : " << RESET << this->getFilename() << std::endl;
 	std::cout << RED << "ROOT : " << RESET << this->getRoot() << std::endl;
 	std::cout << RED << "ACCEPT : " << RESET << std::endl;

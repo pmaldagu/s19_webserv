@@ -4,7 +4,7 @@ Server::Server()
 {
     this->_root = "";
     this->_port = "";
-    this->_host = "";
+    this->_host = "127.0.0.1";
     this->_client_max_body_size = 0;
     this->_server_name = "";
     this->_error_page = "";

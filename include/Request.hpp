@@ -16,6 +16,7 @@ class Request
 		/*parser*/
 		void								splitBuffer(std::string buffer);
 		void								parseHttpVersion();
+		void								parseHostName();
 		void								parseType( void );
 		void								parsePath( void );
 		void								parseLocation(Server& srv);
@@ -29,6 +30,7 @@ class Request
 		std::string							getPath( void ) const;
 		std::list<std::string>				getAccept( void ) const;
 		std::string							getHttpver( void ) const;
+		std::string							getServHostName( void ) const;
 		std::string							getRoot( void ) const;
 		std::string							getFilename( void ) const;
 		std::string							getBody( void ) const;
@@ -74,6 +76,7 @@ class Request
 		std::string				_root;
 		std::string				_body;
 		std::string				_errorpage;
+		std::string				_servhostname;
 		Location*				_location;
 		int						_clientFd;
 };
