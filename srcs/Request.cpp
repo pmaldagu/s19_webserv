@@ -394,14 +394,14 @@ std::string Request::GETResponse(class Server &srv)								//// à virer
 	//std::string contentType;
 	std::ifstream t(("." + this->_root + this->_path + this->_filename).c_str());
 	std::stringstream buffer;
-	buffer << t.rdbuf();
 
+	buffer << t.rdbuf();
 	if (t.is_open() && buffer.str().empty())
 	{
 		t.close();
 		return (errorPage("HTTP/1.1 204 No Content\n"));
 	}
-	if (!t.is_open())
+	else if (!t.is_open())
 	{
 		t.close();
 		return (errorPage("HTTP/1.1 404 Not found\n"));
