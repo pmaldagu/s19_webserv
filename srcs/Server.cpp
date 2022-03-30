@@ -234,6 +234,8 @@ std::vector<std::string>::iterator Server::setLocation(std::vector<std::string>:
        newLocation->setPostMethod(this->getPostMethod());
        newLocation->setDeleteMethod(this->getDeleteMethod());
     }
+    if (!newLocation->getIndex().empty())
+        newLocation->setAutoIndex("autoindex off");
     this->_location_vector.push_back(*newLocation);
     delete newLocation;
     return (it);

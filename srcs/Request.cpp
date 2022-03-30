@@ -35,7 +35,7 @@ Request::Request(std::string buffer, Server& srv, int clientFd)
 	parseHostName();
 	parseFilename();
 	parseLocation(srv);
-	//debug();
+	debug();
 }
 
 Request::Request(Request const& copy)
@@ -352,9 +352,15 @@ std::string Request::GETRequest(Server& srv)
 
 	parseAccept();
 	//debug();
-	response = autoIndex();
+	if (this->_location->getAutoIndex())
+		response = autoIndex();
+	else if (this->_filename.empty())
+	 	response = defaultPage();
+	// else
+	//	response = GETResponse(srv);
 	if (response.empty())
 		response = GETResponse(srv);
+		//response = errorPage("HTTP/1.1 404 Not Found\n");
 	//debug();
 	return (response);
 }
@@ -381,7 +387,7 @@ void Request::parseAccept( void )
 	}
 }
 
-std::string Request::GETResponse(class Server &srv)
+std::string Request::GETResponse(class Server &srv)								//// à virer
 {
 	(void)srv;
 	std::string body;
@@ -438,6 +444,25 @@ std::string Request::contentType()
 	return (""); /////// type de contenu pas accepté /// faut changer quoi
 }
 
+std::string Request::defaultPage()
+{
+	struct stat info;
+	std::string index;
+	int			ret;
+
+	ret = stat(("." + this->_root + this->_path + "/" + this->_filename).c_str(), &info);
+	if (ret == 0 && !S_ISREG(info.st_mode))
+	{
+		std::ifstream ifs(("." + this->_root + "/" + this->_location->getIndex()).c_str());
+		std::stringstream ss;
+		ss << ifs.rdbuf();
+		index = ss.str();
+		ifs.close();
+		return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-length: " + ntostring(index.size()) + "\n\n" + index);
+	}
+	return ("");
+}
+
 std::string Request::autoIndex()//// bug avec index
 {
 	std::string header = "<!DOCTYPE html>\n<html>\n <head>\n  <title>Index of [LOCATION]</title>\n </head>\n <body>\n<h1>Index of [LOCATION]</h1>\n";
@@ -455,10 +480,8 @@ std::string Request::autoIndex()//// bug avec index
 		DIR* dirp;
 		dirp = opendir(("." + this->_root + this->_path).c_str());
 		if (dirp == NULL)
-		{
 			return (errorPage("HTTP/1.1 404 Not Found\n"));
-		}
-		if (this->_path.empty())
+		if (this->_path.empty() || (this->_location->getPath() == "/" && this->_path == "/"))
 		{
 			while ((ret = header.find("[LOCATION]")) != std::string::npos)
 			{
@@ -488,17 +511,24 @@ std::string Request::directoryListing(DIR* dirp)
 	while ((direntp = readdir(dirp)) != NULL)
 	{
 		std::string name = direntp->d_name;
-		if (!this->_path.empty() && name == "..")
+		//P(this->_path, "path");
+		if (this->_path != "/" && name == "..")
 			listing += previousPage();
 		else if (name != "." && name != "..")
 		{
 			buffer = file;
 			ret = buffer.find("[PATH]");
 			buffer.erase(ret, 6);
+			//P(this->_location->getPath(), "getPath()");
 			if (this->_location->getPath() != "/")
-				buffer.insert(ret, this->_location->getPath() + "/" + name);
+				buffer.insert(ret, this->_location->getPath() + this->_path + "/" + name);
 			else
-			 	buffer.insert(ret, this->_location->getPath() + name);
+			{
+				if (this->_path == "/")
+					buffer.insert(ret, "/" + name);
+				else
+			 		buffer.insert(ret, this->_path + "/" + name);
+			}
 			ret = buffer.find("[NAME]");
 			buffer.erase(ret, 6);
 			buffer.insert(ret, direntp->d_name);
@@ -572,7 +602,7 @@ std::string Request::formatLastMod(struct timespec* lastmod)
 
 std::string Request::previousPage() ///bug avec default location
 {
-	std::string file = "<tr><td valign=\"top\"><img src=\"/icons/back.gif\"></td><td><a href=\"[PREV]\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td></tr>";
+	std::string file = "<tr><td valign=\"top\"><img src=\"/icons/back.gif\"></td><td><a href=\"[PREV]\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td></tr>\n";
 	size_t ret;
 	size_t past;
 	
@@ -580,9 +610,18 @@ std::string Request::previousPage() ///bug avec default location
 	file.erase(ret, 6);
 	past = this->_path.rfind("/");
 	if (past == 0)
+	{
+		P("if", "if");
 		file.insert(ret, this->_location->getPath());
+	}
 	else
-		file.insert(ret, this->_location->getPath() + this->_path.substr(0, this->_path.rfind("/") - 1));
+	{
+		P("else", "else");
+		if (this->_location->getPath() == "/")
+			file.insert(ret, this->_path.substr(0, this->_path.rfind("/")));
+		else
+			file.insert(ret, this->_location->getPath() + this->_path.substr(0, this->_path.rfind("/")));
+	}
 	return (file);
 }
 	

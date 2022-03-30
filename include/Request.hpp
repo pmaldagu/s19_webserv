@@ -48,6 +48,7 @@ class Request
 		void								parseAccept( void );
 		std::string							GETResponse(class Server &srv);
 		std::string							contentType();
+		std::string							defaultPage();
 		std::string							autoIndex();
 		std::string							directoryListing(DIR* dirp);
 		//std::string							createHeader(class Server& srv);

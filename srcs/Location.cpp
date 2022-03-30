@@ -85,7 +85,9 @@ void Location::setAutoIndex(std::string autoindex)
 {
     autoindex.erase(std::remove_if(autoindex.begin(), autoindex.end(), isspace), autoindex.end());
     autoindex.erase(0, 9);
-    if (autoindex == "off")
+    if (autoindex == "on")
+        this->_autoindex = true;
+    else if (autoindex == "off")
         this->_autoindex = false;
 }
 
