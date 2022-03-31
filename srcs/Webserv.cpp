@@ -131,7 +131,7 @@ void Webserv::setListen( void )
 
 	for ( ; it != _servers.end(); it++)
 	{
-		if ((listen((*it).getFd(), 32)) < 0)
+		if ((listen((*it).getFd(), 0)) < 0)
 			throw std::runtime_error("listen() failed");
 	}
 }

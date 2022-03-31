@@ -81,7 +81,10 @@ void Config::checkPort()
         for (; b < this->_serv_vector.size(); b++)
         {
             if (this->_serv_vector[a].getPort() == this->_serv_vector[b].getPort() && this->_serv_vector[a].getHost() == this->_serv_vector[b].getHost())
-                throw std::runtime_error("(.conf parsing Config): Several ports have the same name");
+            {
+                if ((this->_serv_vector[a].getServername().empty() || this->_serv_vector[b].getServername().empty()) || (this->_serv_vector[a].getServername() == this->_serv_vector[b].getServername()))
+                    throw std::runtime_error("(.conf parsing Config): Several ports have the same name");
+            }
         }
     }
 }
