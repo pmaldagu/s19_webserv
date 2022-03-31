@@ -118,10 +118,7 @@ void Webserv::bindSocket( void )
 	{
 		if ((bind((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), 
 				sizeof(struct sockaddr_in))) < 0)
-		{
-			std::cout << BLUE << "BIND ERR : " << std::strerror(errno) << RESET << std::endl;
 			throw std::runtime_error("bind() failed");
-		}
 	}
 }
 
@@ -359,7 +356,6 @@ void Webserv::launch( void )
 			for (; clt != _clients.end(); clt++)
 				close((*clt).getFd());
 			_clients.clear();
-			throw std::runtime_error("select() failed"); // à enlever
 		}
 	}
 }

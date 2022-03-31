@@ -92,6 +92,7 @@ void Request::splitBuffer(std::string buffer)
 	}
 	if (index + 2 != buffer.size())
 	 	this->_body = buffer.erase(0, index + 2);
+	dechunk();
 	// std::list<std::string>::iterator it = this->_buffer.begin();
 	// for (; it != this->_buffer.end(); it++)
 	// 	P((*it), "it");
@@ -137,7 +138,7 @@ void Request::parsePath( void )
 	this->_path.erase(std::remove(this->_path.begin(), this->_path.end(), '\r'), this->_path.end());
 }
 
-void Request::parseLocation(Server& srv)		 //////// Probleme : si filename = au nom d'une location -> server crash
+void Request::parseLocation(Server& srv)
 {
 	std::vector<class Location>::iterator	it = srv.getLocation().begin();
 	size_t									ret = 0;
@@ -168,61 +169,61 @@ void Request::parseFilename()
 	}
 }
 
-void Request::parseBody()
-{
-	std::list<std::string>::iterator	it = this->_buffer.begin();
-	bool								chunck = false;
+// void Request::parseBody()
+// {
+// 	std::list<std::string>::iterator	it = this->_buffer.begin();
+// 	bool								chunck = false;
 
-	//debug();
-	for (; it != this->_buffer.end(); it++)
-	{
-		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
-		{
-			chunck = true;
-			break;
-		}
-	}
-	it = this->_buffer.begin();
-	while (it != this->_buffer.end() && (*it).size() != 0)
-	{
-		if ((*it).find("boundary=") != std::string::npos)
-			it++;
-		it++;
-	}
-	if (it != this->_buffer.end())
-		it++;
-	// P((*it), "it");
-	// P((*it).size(), "it size");
-	for (; it != this->_buffer.end(); it++)
-	{
-		this->_body.append((*it) + "\n");
-		// P(this->_body, "bodyy");
-	}
-	if (chunck)
-		dechunk();  //https://fr.wikipedia.org/wiki/Chunked_transfer_encoding
-}
+// 	//debug();
+// 	for (; it != this->_buffer.end(); it++)
+// 	{
+// 		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
+// 		{
+// 			chunck = true;
+// 			break;
+// 		}
+// 	}
+// 	it = this->_buffer.begin();
+// 	while (it != this->_buffer.end() && (*it).size() != 0)
+// 	{
+// 		if ((*it).find("boundary=") != std::string::npos)
+// 			it++;
+// 		it++;
+// 	}
+// 	if (it != this->_buffer.end())
+// 		it++;
+// 	// P((*it), "it");
+// 	// P((*it).size(), "it size");
+// 	for (; it != this->_buffer.end(); it++)
+// 	{
+// 		this->_body.append((*it) + "\n");
+// 		// P(this->_body, "bodyy");
+// 	}
+// 	if (chunck)
+// 		dechunk();  //https://fr.wikipedia.org/wiki/Chunked_transfer_encoding
+// }
 
 void Request::dechunk()
 {
+	std::list<std::string>::iterator	it = this->_buffer.begin();
 	std::string buffer;
-	int y, i = 0;
+	size_t y, j, i = 0;
 	std::stringstream stream;
 
-	while (this->_body[i])
+	for (; it != this->_buffer.end(); it++)
 	{
-		for (; this->_body[i] && this->_body[i] != '\n'; i++)
-		{
-			stream << this->_body[i];
-			stream >> std::hex >> y;
-		}
-		if (y == 0)
-			break;
-		for (; this->_body[i] && i < y; i++)
-			buffer.push_back(this->_body[i]);
-		while (this->_body[i] && this->_body[i] != '\n')
-			i++;
-		i++;
+		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
+			break ;
 	}
+	if (it == this->_buffer.end())
+		return ;
+	for (; i < this->_body.find("\r\n"); i++)
+		stream << this->_body[i];
+	stream >> std::hex >> y;
+	i += 2;
+	j = i;
+	for (; i < this->_body.find("0\r\n") && i <= y + j; i++)
+		buffer.push_back(this->_body[i]);
 	this->_body = buffer;
 }
 
@@ -325,7 +326,7 @@ std::string Request::respond(class Server& srv)
 	//debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
-	if ((this->_servhostname != srv.getHost() + ":" + srv.getPort()) && (this->_servhostname != "localhost:" + srv.getPort()))
+	if ((this->_servhostname != srv.getHost() + ":" + srv.getPort()) && (this->_servhostname != "localhost:" + srv.getPort()) && (this->_servhostname != srv.getServername()))
 	 	return (errorPage("HTTP/1.1 400 Bad Request\n"));
 	else if (!this->_location->getRedirection().empty())
 		return ("HTTP/1.1 301 Moved Permanently\nLocation: " + this->_location->getRedirection() + "\n");
@@ -378,7 +379,7 @@ void Request::parseAccept( void )
 	}
 	index += 8;
 	if (it == this->_buffer.end())
-		throw std::runtime_error("parseAccept() failed");
+		return ;
 	while((ret = (*it).find(",", index)) != std::string::npos ||
 			(ret = (*it).find(";", index)) != std::string::npos)
 	{
@@ -647,9 +648,14 @@ std::string Request::POSTRequest(Server& srv)
 	}
 	if (size > srv.getCmaxsize())
 		return ("HTTP/1.1 413 Request Entity Too Large\n");
+	for (; it != this->_buffer.end(); it++)
+	{
+		if ((*it).find("Content-Disposition: ") != std::string::npos)
+			break;
+	}
 	//parseBody();
 	//P(this->_body, "this body");
-	if (!this->_filename.empty())
+	if (it == this->_buffer.end())
 		return (postAppend());
 	return (postUpload());
 }
@@ -681,8 +687,12 @@ std::string Request::postUpload()
 
 std::string Request::postAppend()
 {
-	std::ofstream file_out;
+	std::ofstream	file_out;
+	struct stat		fileInfo;
 
+	stat(("." + this->_root + this->_path + this->_filename).c_str(), &fileInfo);
+	if (!S_ISREG(fileInfo.st_mode))
+		return ("HTTP/1.1 400 Bad Request\n");
 	if (!this->_filename.empty())
 	{
 		file_out.open(("." + this->_location->getRoot() + this->_path + this->_filename).c_str(), std::ios_base::app);
@@ -702,11 +712,15 @@ std::string Request::postAppend()
 std::string Request::DELETERequest()
 {
 	struct stat fileInfo;
-	stat(("." + this->_root + this->_path + this->_filename).c_str(), &fileInfo);
+	int ret;
+
+	ret = stat(("." + this->_root + this->_path + this->_filename).c_str(), &fileInfo);
 	if (S_ISREG(fileInfo.st_mode))
 		std::remove(("." + this->_root + this->_path + this->_filename).c_str());
+	else if (ret == -1)
+		return ("HTTP/1.1 404 Not Found\n");
 	else
-		return ("HTTP/1.1 202 Accepted\n"); 			/// maybe 404
+		return ("HTTP/1.1 204 Accepted\n");
 	return ("HTTP/1.1 200 OK\n\n{\"success\":\"true\"}\n");
 }
 

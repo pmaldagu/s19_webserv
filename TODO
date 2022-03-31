@@ -1,6 +1,2 @@
-1. POST : upload_dir
-2. Chunks (fait mais à tester)
-3. Enlever errno et throw inutile
-4. Server name
-5. CGI
-6. Réparer POST append
+1. Server name (fait à moitier)
+2. CGI (nique sa mère)
