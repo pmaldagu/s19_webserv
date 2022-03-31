@@ -26,11 +26,6 @@ Config::Config(char* path) : _serv_vector()
             (*it).erase(a, (*it).length() - a);
     }
     ifs.close();
-
-    ////////// print .conf clean //////////
-    //for (int a = 0; a < _data.size(); a++)
-    //     std::cout << _data[a] << std::endl;
-    ///////////////////////////////////////
 }
 
 Config::Config(Config const& copy)

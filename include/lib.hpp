@@ -18,7 +18,6 @@
 # include <functional>
 # include <arpa/inet.h>
 # include <fcntl.h>
-# include <errno.h>
 # include <sys/stat.h>
 # include <dirent.h>
 # include <sys/types.h>

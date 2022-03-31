@@ -74,12 +74,10 @@ void Request::splitBuffer(std::string buffer)
 	size_t	ret = 0;
 	bool	boundary = false;
 
-	//P(buffer.size(), "size buffer");
-	// buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
 	while (index < buffer.size() && buffer[index] != '\r')
 	{
 		if ((ret = buffer.find("\n", index)) == std::string::npos)
-			break ;// ret = buffer.size();
+			break ;
 		this->_buffer.push_back(buffer.substr(index, ret - index));
 		index = ret + 1;
 		if (this->_buffer.back().find("boundary=") != std::string::npos)
@@ -93,9 +91,6 @@ void Request::splitBuffer(std::string buffer)
 	if (index + 2 != buffer.size())
 	 	this->_body = buffer.erase(0, index + 2);
 	dechunk();
-	// std::list<std::string>::iterator it = this->_buffer.begin();
-	// for (; it != this->_buffer.end(); it++)
-	// 	P((*it), "it");
 }
 
 void Request::parseHttpVersion()
@@ -117,7 +112,6 @@ void Request::parseHostName()
 		if ((*it).find("Host: ") != std::string::npos)
 			this->_servhostname = (*it).substr(6, (*it).size() - 7);
 	}
-	// P(this->_servhostname, "hostname");
 }
 
 void Request::parseType( void )
@@ -146,7 +140,7 @@ void Request::parseLocation(Server& srv)
 	this->_location = &(*it);
 	for (; it != srv.getLocation().end(); it++)
 	{
-		if (((ret = this->_path.find((*it).getPath())) != std::string::npos) && ((*it).getPath().size() != 1) /*&& (ret < this->_path.rfind("/"))*/)
+		if (((ret = this->_path.find((*it).getPath())) != std::string::npos) && ((*it).getPath().size() != 1))
 		{
 			this->_root = (*it).getRoot();
 			this->_path = this->_path.substr((*it).getPath().size(), this->_path.size() - 1);
@@ -168,40 +162,6 @@ void Request::parseFilename()
 		this->_path = this->_path.substr(0, ret);
 	}
 }
-
-// void Request::parseBody()
-// {
-// 	std::list<std::string>::iterator	it = this->_buffer.begin();
-// 	bool								chunck = false;
-
-// 	//debug();
-// 	for (; it != this->_buffer.end(); it++)
-// 	{
-// 		if ((*it).find("Transfer-Encoding: chunked") != std::string::npos)
-// 		{
-// 			chunck = true;
-// 			break;
-// 		}
-// 	}
-// 	it = this->_buffer.begin();
-// 	while (it != this->_buffer.end() && (*it).size() != 0)
-// 	{
-// 		if ((*it).find("boundary=") != std::string::npos)
-// 			it++;
-// 		it++;
-// 	}
-// 	if (it != this->_buffer.end())
-// 		it++;
-// 	// P((*it), "it");
-// 	// P((*it).size(), "it size");
-// 	for (; it != this->_buffer.end(); it++)
-// 	{
-// 		this->_body.append((*it) + "\n");
-// 		// P(this->_body, "bodyy");
-// 	}
-// 	if (chunck)
-// 		dechunk();  //https://fr.wikipedia.org/wiki/Chunked_transfer_encoding
-// }
 
 void Request::dechunk()
 {
@@ -299,12 +259,10 @@ std::string Request::errorPage(std::string str)
 {
 	size_t				ret = 0;
 	std::string			error;
-	// if (srv.getErrorPage().empty())			  //// default error_page
 	std::ifstream		t(this->_errorpage.c_str());
+
 	if (!t.is_open())
 		t.open("./www/error.html");
-	// else
-	// 	std::ifstream 		t("root" + "/");
 	std::stringstream	buffer;
 	buffer << t.rdbuf();
 	t.close();
@@ -312,18 +270,12 @@ std::string Request::errorPage(std::string str)
 
 	ret = error.find("STATUS");
 	error.erase(ret, ret + 6);
-	// if (str.empty())
-	// 	error.insert(ret, this->_bad_status);
-	//else
-		error.insert(ret, str);
+	error.insert(ret, str);
 	return (str + "Content-Type: text/html\nContent-length: " + ntostring(error.size()) + "\n\n" + error);
 }
 
-//else if ()
-//	this->_status = "HTTP/1.1 301 Moved Permanently\n";
 std::string Request::respond(class Server& srv)
 {
-	//debug();
 	if (this->_httpver != "HTTP/1.1")
 		return (errorPage("HTTP/1.1 505 HTTP Version not supported\n"));
 	if ((this->_servhostname != srv.getHost() + ":" + srv.getPort()) && (this->_servhostname != "localhost:" + srv.getPort()) && (this->_servhostname != srv.getServername()))
@@ -352,17 +304,12 @@ std::string Request::GETRequest(Server& srv)
 	std::string response;
 
 	parseAccept();
-	//debug();
 	if (this->_location->getAutoIndex())
 		response = autoIndex();
 	else if (this->_filename.empty())
 	 	response = defaultPage();
-	// else
-	//	response = GETResponse(srv);
 	if (response.empty())
 		response = GETResponse(srv);
-		//response = errorPage("HTTP/1.1 404 Not Found\n");
-	//debug();
 	return (response);
 }
 
@@ -388,11 +335,10 @@ void Request::parseAccept( void )
 	}
 }
 
-std::string Request::GETResponse(class Server &srv)								//// à virer
+std::string Request::GETResponse(class Server &srv)
 {
 	(void)srv;
 	std::string body;
-	//std::string contentType;
 	std::ifstream t(("." + this->_root + this->_path + this->_filename).c_str());
 	std::stringstream buffer;
 
@@ -418,10 +364,6 @@ std::string Request::GETResponse(class Server &srv)								//// à virer
 	}
 	else
 		body = buffer.str();
-	//P(body.size(), "BODY");
-	//contentType = contentType();
-	// if (contentType.empty())
-	// 	return ()
 	return ("HTTP/1.1 200 OK\n" + contentType() + "Content-length: " + ntostring(body.size()) + "\n\n" + body);
 }
 
@@ -442,7 +384,7 @@ std::string Request::contentType()
 			return ("Content-Type: " + type + "\n");
 		}
 	}
-	return (""); /////// type de contenu pas accepté /// faut changer quoi
+	return ("");
 }
 
 std::string Request::defaultPage()
@@ -464,7 +406,7 @@ std::string Request::defaultPage()
 	return ("");
 }
 
-std::string Request::autoIndex()//// bug avec index
+std::string Request::autoIndex()
 {
 	std::string header = "<!DOCTYPE html>\n<html>\n <head>\n  <title>Index of [LOCATION]</title>\n </head>\n <body>\n<h1>Index of [LOCATION]</h1>\n";
 	std::string table = "  <table>\n   <tr><th valign=\"top\"><img src=\"/icons/blank.gif\" alt=\"[ICO]\"></th><th>Name</th><th>Last modified</th><th>Size</th></tr>\n   <tr><th colspan=\"4\"><hr></th></tr>\n";
@@ -512,7 +454,7 @@ std::string Request::directoryListing(DIR* dirp)
 	while ((direntp = readdir(dirp)) != NULL)
 	{
 		std::string name = direntp->d_name;
-		//P(this->_path, "path");
+
 		if (this->_path != "/" && name == "..")
 			listing += previousPage();
 		else if (name != "." && name != "..")
@@ -520,7 +462,6 @@ std::string Request::directoryListing(DIR* dirp)
 			buffer = file;
 			ret = buffer.find("[PATH]");
 			buffer.erase(ret, 6);
-			//P(this->_location->getPath(), "getPath()");
 			if (this->_location->getPath() != "/")
 				buffer.insert(ret, this->_location->getPath() + this->_path + "/" + name);
 			else
@@ -601,7 +542,7 @@ std::string Request::formatLastMod(struct timespec* lastmod)
 	return (format);
 }
 
-std::string Request::previousPage() ///bug avec default location
+std::string Request::previousPage()
 {
 	std::string file = "<tr><td valign=\"top\"><img src=\"/icons/back.gif\"></td><td><a href=\"[PREV]\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td></tr>\n";
 	size_t ret;
@@ -653,8 +594,6 @@ std::string Request::POSTRequest(Server& srv)
 		if ((*it).find("Content-Disposition: ") != std::string::npos)
 			break;
 	}
-	//parseBody();
-	//P(this->_body, "this body");
 	if (it == this->_buffer.end())
 		return (postAppend());
 	return (postUpload());
@@ -667,7 +606,6 @@ std::string Request::postUpload()
 	std::string							filename;
 	size_t								ret;
 
-	//debug();
 	for (; it != this->_buffer.end(); it++)
 	{
 		if ((ret = (*it).rfind("boundary=")) != std::string::npos)

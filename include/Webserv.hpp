@@ -13,8 +13,6 @@ class Webserv
 
 		Webserv& 							operator=(Webserv const& copy);
 
-		char on; //UTILE ??
-
 		/*getter*/
 		class Server&						getServer(int fd);
 

@@ -13,12 +13,12 @@
 #include "../include/lib.hpp"
 #include <cstring>
 
-Webserv::Webserv() : on(1)
+Webserv::Webserv()
 {
 	throw std::runtime_error("no config file");
 }
 
-Webserv::Webserv( std::vector<class Server> const& servers ) : on(1)
+Webserv::Webserv( std::vector<class Server> const& servers )
 {
 	
 	for (size_t i = 0; i < servers.size(); i++) {
@@ -48,7 +48,6 @@ Webserv& Webserv::operator=(Webserv const& copy)
 {
 	if (this != &copy)
 	{
-		this->on = copy.on;
 		this->_servers = copy._servers;
 		this->_clients = copy._clients;
 		this->readfds = copy.readfds;
@@ -58,7 +57,8 @@ Webserv& Webserv::operator=(Webserv const& copy)
 }
 		
 Webserv::~Webserv( void )
-{	/* voir destructor de client et server*/
+{
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,6 @@ int Webserv::setFds( void )
 				max_sd = (*clt).getFd();
 		}
 	}
-	// P(debug, "READFDS");
 	return (max_sd);
 }
 
@@ -176,9 +175,7 @@ void Webserv::acceptConnection(std::list<class Server>::iterator it, std::string
 	int addrlen = sizeof(struct sockaddr_in);
 
 	/*accept*/	
-	// P((*it).getFd(), "GETFD");
 	new_socket = accept((*it).getFd(), (struct sockaddr *)&(*it).getSockaddr(), (socklen_t*)&addrlen);
-	// P(errno, "ERRNO");
 	if (new_socket < 0)
 		throw std::runtime_error("accept() failed");
 	
@@ -223,9 +220,6 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 		if (ret > 0)
 			msg.write((const char *)buffer, ret);
 		debug += ret;
-		// msg.seekp(0, std::ios::end);	
-		// P(msg.tellp(), "SIZE");
-		// P(debug, "UPLOADED");
 	}
 
 	/*100 Continue*/
@@ -240,12 +234,9 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 			if (ret > 0)
 				msg.write((const char *)buffer, ret);
 			debug += ret;
-			// msg.seekp(0, std::ios::end);
-			// P(msg.tellp(), "SIZE");
-			// P(debug, "UPLOADED");
 		}
 	}	
-	//P(debug + 1, "debug");
+
 	/*Check error*/
 	if (ret == 0)
 	{

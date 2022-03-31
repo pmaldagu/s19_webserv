@@ -4,7 +4,6 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        ///////// .conf par défaut????????????????? 
         std::cerr << RED << "Error : Configuration file is missing." << RESET << std::endl;
         return (-1);
     }
