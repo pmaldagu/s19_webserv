@@ -6,7 +6,7 @@
 /*   By: namenega <namenega@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 10:48:23 by namenega          #+#    #+#             */
-/*   Updated: 2022/03/24 16:00:00 by pmaldagu         ###   ########.fr       */
+/*   Updated: 2022/03/31 16:57:57 by namenega         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -485,8 +485,8 @@ std::string Request::directoryListing(DIR* dirp)
 				buffer.insert(ret, "/icons/unknown.gif");
 			ret = buffer.find("[LASTMOD]");
 			buffer.erase(ret, 9);
-			buffer.insert(ret, formatLastMod(&info.st_mtim));	//Linux/WSL
-			// buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//Mac
+			//buffer.insert(ret, formatLastMod(&info.st_mtim));	//Linux/WSL
+			buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//Mac
 			ret = buffer.find("[SIZE]");
 			buffer.erase(ret, 6);
 			if (!S_ISREG(info.st_mode))
