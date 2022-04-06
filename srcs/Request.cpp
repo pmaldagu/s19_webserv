@@ -142,6 +142,7 @@ void Request::parseLocation(Server& srv)
 	{
 		if (((ret = this->_path.find((*it).getPath())) != std::string::npos) && ((*it).getPath().size() != 1))
 		{
+			P((*it).getRoot(), "getroot");
 			this->_root = (*it).getRoot();
 			this->_path = this->_path.substr((*it).getPath().size(), this->_path.size() - 1);
 			this->_location = &(*it);
