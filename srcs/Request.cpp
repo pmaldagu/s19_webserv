@@ -485,8 +485,8 @@ std::string Request::directoryListing(DIR* dirp)
 				buffer.insert(ret, "/icons/unknown.gif");
 			ret = buffer.find("[LASTMOD]");
 			buffer.erase(ret, 9);
-			//buffer.insert(ret, formatLastMod(&info.st_mtim));	//Linux/WSL
-			buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//Mac
+			buffer.insert(ret, formatLastMod(&info.st_mtim));	//Linux/WSL
+			//buffer.insert(ret, formatLastMod(&info.st_mtimespec));	//Mac
 			ret = buffer.find("[SIZE]");
 			buffer.erase(ret, 6);
 			if (!S_ISREG(info.st_mode))
@@ -552,13 +552,9 @@ std::string Request::previousPage()
 	file.erase(ret, 6);
 	past = this->_path.rfind("/");
 	if (past == 0)
-	{
-		P("if", "if");
 		file.insert(ret, this->_location->getPath());
-	}
 	else
 	{
-		P("else", "else");
 		if (this->_location->getPath() == "/")
 			file.insert(ret, this->_path.substr(0, this->_path.rfind("/")));
 		else

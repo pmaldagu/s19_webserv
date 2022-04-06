@@ -226,7 +226,7 @@ std::list<class Client>::iterator Webserv::receiveRequest(std::list<class Client
 	if (msg.str().find("Expect") != std::string::npos)
 	{
 		ret = 1;
-		sleep(1);
+		sleep(2);
 		while (ret > 0)
 		{
 			memset(buffer, 0, 4096);
